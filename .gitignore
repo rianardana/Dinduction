@@ -426,3 +426,15 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Ignore wwwroot/lib (libraries managed by CDN or npm)
+wwwroot/lib/
+
+# Ignore publish folder
+publish/
+
+# Ignore node_modules (if you use npm)
+node_modules/
+
+# Ignore VS Code settings (opsional)
+.vscode/
