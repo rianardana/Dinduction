@@ -17,5 +17,15 @@ public class GeneralMappingProfile : Profile
 
         CreateMap<Section, SectionVM>();
         CreateMap<SectionVM, Section>();
+
+        CreateMap<Trainer, TrainerVM>()
+                .ForMember(dest => dest.SectionName,
+                    opt => opt.MapFrom(src => src.Section != null ? src.Section.SectionName : string.Empty))
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
+                .ForMember(dest => dest.TrainerName,
+                    opt => opt.MapFrom(src => src.User != null ? src.User.EmployeeName : string.Empty));
+        CreateMap<TrainerVM, Trainer>();
     }
+    
 }

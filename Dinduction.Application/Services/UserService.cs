@@ -171,4 +171,11 @@ public class UserService : IUserService
     {
         return await _uow.Repository<User>().GetAsync(u => u.Password == username);
     }
+    public async Task<User?> GetByUserNameAsync(string userName)
+    {
+            if (string.IsNullOrWhiteSpace(userName))
+                return null;
+
+            return await _uow.Repository<User>().GetAsync(u => u.UserName == userName);
+    }
 }
