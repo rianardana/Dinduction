@@ -1,0 +1,56 @@
+@model Dinduction.Web.Models.RoleVM
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Page Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Create Role</h1>
+            <p class="mt-1 text-sm text-gray-600">Create a new role for users</p>
+        </div>
+
+        <a href="@Url.Action("Index", "Role")"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg shadow-sm">
+            Back to List
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form asp-action="Create" asp-controller="Role" method="post" class="space-y-6">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Create New Role</h3>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label asp-for="RoleName" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <input asp-for="RoleName" class="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm
+                                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        <span asp-validation-for="RoleName" class="text-sm text-red-600"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div asp-validation-summary="ModelOnly" class="text-sm text-red-600 mb-2"></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm">
+                    Save
+                </button>
+
+                <a href="@Url.Action("Index", "Role")"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm font-medium rounded-lg">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

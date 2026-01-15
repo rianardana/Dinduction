@@ -1,0 +1,95 @@
+@model Dinduction.Web.Models.TrainerVM
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Page Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Create Trainer</h1>
+            <p class="mt-1 text-sm text-gray-600">
+                Complete trainer data — choose user and assign section
+            </p>
+        </div>
+
+        <a href="@Url.Action("Index", "Trainer")" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg shadow-sm">
+            Back to List
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form asp-action="Create" asp-controller="Trainer" method="post" class="space-y-6">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Complete Data Trainer</h3>
+                <p class="text-sm text-gray-500 mb-4">Select an existing user and assign them to a section.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- User select (styled Tailwind) -->
+                    <div>
+                        <label asp-for="UserId" class="block text-sm font-medium text-gray-700 mb-1"></label>
+
+                        <div class="relative">
+                            <select asp-for="UserId" asp-items="Model.ListUser"
+                                    class="block w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
+                                
+                            </select>
+
+                            <!-- chevron icon -->
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path d="M7 7l3 3 3-3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <span asp-validation-for="UserId" class="text-sm text-red-600"></span>
+                    </div>
+
+                    <!-- Section select (styled Tailwind) -->
+                    <div>
+                        <label asp-for="SectionId" class="block text-sm font-medium text-gray-700 mb-1"></label>
+
+                        <div class="relative">
+                            <select asp-for="SectionId" asp-items="Model.ListSection"
+                                    class="block w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
+                            
+                            </select>
+
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true">
+                                    <path d="M7 7l3 3 3-3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <span asp-validation-for="SectionId" class="text-sm text-red-600"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div asp-validation-summary="ModelOnly" class="text-sm text-red-600 mb-2"></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Create
+                </button>
+
+                <a href="@Url.Action("Index", "Trainer")" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm font-medium rounded-lg">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @* Partial ensures client-side validation scripts are loaded (create it if not present) *@
+    <partial name="_ValidationScriptsPartial" />
+}
