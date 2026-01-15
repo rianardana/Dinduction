@@ -1,0 +1,153 @@
+@{
+    var employeeName = Context.Session.GetString("EmployeeName") ?? "User";
+}
+
+<style>
+    body {
+        background-color: #f8fafc;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+    }
+    .card {
+        transition: all 0.2s ease-in-out;
+    }
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07);
+    }
+
+    /* Header Minimalis */
+    .header-bar {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.875rem;
+    }
+    .header-title {
+        font-weight: 600;
+        color: #1e3a8a;
+    }
+    .logout-link {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #4b5563;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    .logout-link:hover {
+        color: #2563eb;
+    }
+    .logout-icon {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        transition: transform 0.2s ease;
+    }
+    .logout-link:hover .logout-icon {
+        transform: translateX(-2px);
+    }
+
+    /* Card User Info */
+    .user-card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px auto 24px;
+        max-width: 500px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+    }
+    .user-card h5 {
+        font-weight: 600;
+        margin: 0;
+        color: #1e3a8a;
+    }
+    .user-card p {
+        margin: 4px 0 0;
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    /* Quiz Card */
+    .quiz-card {
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+        margin: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 120px;
+        overflow: hidden;
+    }
+    .quiz-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        border-color: #cbd5e1;
+    }
+    .quiz-card img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        margin-right: 12px;
+    }
+    .quiz-card-label {
+        font-weight: 600;
+        color: #1e3a8a;
+        font-size: 0.875rem;
+    }
+
+    /* Footer */
+    .footer-sticky {
+        margin-top: auto;
+        padding: 12px 16px;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+</style>
+
+<div class="px-4 py-6">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-xl font-bold text-gray-800 text-center mb-6">SELECT QUIZ</h2>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+            @{
+                var quizList = new (string id, string label)[]
+                {
+                    ("10", "FORMULIR EVALUASI UNTUK TM-QA-01 (PROFIL PERUSAHAAN DAN PROSES PRODUKSI)"),
+                    ("2", "FORMULIR EVALUASI UNTUK TM-QA-02 (KEBIJAKAN KUALITAS PERUSAHAAN)"),
+                    ("3", "FORMULIR EVALUASI UNTUK TM-QA-03 (PENGENALAN 5S DAN IMPLEMENTASINYA)"),
+                    ("4", "FORMULIR EVALUASI UNTUK TM-QA-04 (LINGKUNGAN)"),
+                    ("5", "FORMULIR EVALUASI UNTUK TM-QA-05 (PERSYARATAN DIE CASTING)"),
+                    ("6", "FORMULIR EVALUASI UNTUK TM-ADMIN-04 (KESEHATAN DAN KESELAMATAN KERJA)"),
+                    ("7", "FORMULIR EVALUASI UNTUK ORIENTASI KARYAWAN BARU"),
+                    ("8", "FORMULIR EVALUASI UNTUK PEDOMAN ETIKA USAHA DAN TATA PERILAKU DYNACAST")
+                };
+            }
+
+            @foreach (var (id, label) in quizList)
+            {
+                <a href="/Quiz/Record/@id" class="block">
+                    <div class="quiz-card">
+                        <img src="~/Images/@(id).png" alt="@label" />
+                        <span class="quiz-card-label">@label</span>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
