@@ -1,8 +1,8 @@
-
 using Dinduction.Application.Interfaces;
 using Dinduction.Domain.Entities;
+using System.Linq.Expressions;
 
-namespace Dinduction.Application.Services;
+namespace Dinduction.Infrastructure.Services; // 👈 pastikan namespace sesuai konvensi
 
 public class SectionService : ISectionService
 {
@@ -10,7 +10,7 @@ public class SectionService : ISectionService
 
     public SectionService(IUnitOfWork uow)
     {
-        _uow = uow;
+        _uow = uow ?? throw new ArgumentNullException(nameof(uow));
     }
 
     public async Task<List<Section>> GetAllAsync()
@@ -30,7 +30,7 @@ public class SectionService : ISectionService
             throw new ArgumentNullException(nameof(obj));
 
         _uow.Repository<Section>().Add(obj);
-        _uow.SaveChanges();
+        await _uow.SaveChangesAsync(); 
     }
 
     public async Task UpdateAsync(Section obj)
@@ -39,7 +39,7 @@ public class SectionService : ISectionService
             throw new ArgumentNullException(nameof(obj));
 
         _uow.Repository<Section>().Update(obj);
-        _uow.SaveChanges();
+        await _uow.SaveChangesAsync(); 
     }
 
     public async Task DeleteAsync(int id)
@@ -48,7 +48,7 @@ public class SectionService : ISectionService
         if (section != null)
         {
             _uow.Repository<Section>().Delete(section);
-            _uow.SaveChanges();
+            await _uow.SaveChangesAsync(); 
         }
     }
 }

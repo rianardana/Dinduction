@@ -1,0 +1,179 @@
+@model Dinduction.Web.Models.ParticipantUserVM
+
+<div class="max-w-4xl mx-auto px-4 py-6">
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Add Training Participants</h1>
+        <p class="mt-1 text-sm text-gray-600">Select participants for the training session</p>
+    </div>
+
+    <!-- Form -->
+    <form asp-action="Select" asp-controller="Participant" method="post" class="space-y-6">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="SectionTrainerId" />
+        <input type="hidden" asp-for="EmployeeName" />
+        <input type="hidden" asp-for="Department" />
+        <input type="hidden" asp-for="UserName" />
+
+        <!-- Validation Summary -->
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div class="text-red-700">
+                    <strong class="font-medium">Error!</strong>
+                    <ul class="mt-2 list-disc list-inside">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- Training Info Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Trainer</label>
+                    <input asp-for="TrainerName" readonly 
+                           class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm" />
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Training</label>
+                    <input asp-for="TrainingName" readonly 
+                           class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Participants Selection -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Available Participants</h2>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-6">
+                    
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="selectAll"
+                            class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                        <label for="selectAll" class="text-sm text-gray-700">
+                            Select All
+                        </label>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <span>Selected:</span>
+                        <span id="selectedCount" class="font-semibold text-blue-600">0</span>
+                        <span>/ @Model.ListParticipant.Count(x => x.Value != "0")</span>
+                    </div>
+
+                </div>
+
+                </div>
+            </div>
+
+            <div class="p-6">
+                @if (Model.ListParticipant.Any(x => x.Value != "0"))
+                {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        @for (int i = 0; i < Model.ListParticipant.Count; i++)
+                        {
+                            if (Model.ListParticipant[i].Value == "0") continue;
+                            
+                            <div class="participant-item flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" 
+                                       name="SelectedParticipants" 
+                                       value="@Model.ListParticipant[i].Value"
+                                       id="participant_@i" 
+                                       class="participant-checkbox w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-0.5" />
+                                <label for="participant_@i" class="text-sm text-gray-900 cursor-pointer flex-1">
+                                    @Model.ListParticipant[i].Text
+                                </label>
+                            </div>
+                        }
+                    </div>
+                    
+                    <span asp-validation-for="SelectedParticipants" class="text-red-600 text-sm mt-2 block"></span>
+                }
+                else
+                {
+                    <div class="text-center py-8">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-600">No participants available for this training</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4">
+            <a href="@Url.Action("ChooseTraining", "Participant")" 
+               class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                Back to List
+            </a>
+            <button type="submit" 
+                    class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                Add Selected Participants
+            </button>
+        </div>
+    </form>
+
+</div>
+
+@section Scripts {
+    <script>
+    function selectAllCheckboxes(source) {
+        const checkboxes = document.querySelectorAll(
+            'input[name="SelectedParticipants"]:not([value="0"])'
+        );
+
+        checkboxes.forEach(cb => cb.checked = source.checked);
+        countSelected();
+    }
+
+    function countSelected() {
+        const allCheckboxes = document.querySelectorAll(
+            'input[name="SelectedParticipants"]:not([value="0"])'
+        );
+
+        const selectedCheckboxes = document.querySelectorAll(
+            'input[name="SelectedParticipants"]:not([value="0"]):checked'
+        );
+
+        document.getElementById('selectedCount').textContent =
+            selectedCheckboxes.length;
+
+        const selectAllCheckbox = document.getElementById('selectAll');
+        selectAllCheckbox.checked =
+            selectedCheckboxes.length === allCheckboxes.length;
+
+        selectAllCheckbox.indeterminate =
+            selectedCheckboxes.length > 0 &&
+            selectedCheckboxes.length < allCheckboxes.length;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const checkboxes = document.querySelectorAll(
+            'input[name="SelectedParticipants"]:not([value="0"])'
+        );
+
+        checkboxes.forEach(cb =>
+            cb.addEventListener('change', countSelected)
+        );
+
+        document.getElementById('selectAll')
+            .addEventListener('change', function () {
+                selectAllCheckboxes(this);
+            });
+
+        countSelected();
+    });
+</script>
+
+}
