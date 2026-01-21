@@ -28,7 +28,7 @@ public interface IUserService
     Task<int> CountUserByDateAsync(DateOnly date); 
     Task<User?> GetPasswordAsync(string username);
 
-     // methods for Excel helper / CRUD
-        Task<User?> GetByUserNameAsync(string userName);
+    Task<User?> GetByUserNameAsync(string userName);
+    
 
 }

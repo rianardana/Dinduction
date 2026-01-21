@@ -75,20 +75,18 @@
         color: #64748b;
     }
 
-    /* Quiz Card */
-    .quiz-card {
+    /* Quiz Card — disesuaikan dengan gaya dashboard */
+        .quiz-card {
         background: white;
         border-radius: 12px;
-        padding: 12px;
+        padding: 16px;
         margin: 8px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         border: 1px solid #e5e7eb;
         transition: all 0.2s ease;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 120px;
-        overflow: hidden;
+        align-items: flex-start; /* penting: biar teks nggak dipaksa center vertikal */
+        min-height: 80px;
     }
     .quiz-card:hover {
         transform: translateY(-4px);
@@ -96,15 +94,21 @@
         border-color: #cbd5e1;
     }
     .quiz-card img {
-        width: 64px;
-        height: 64px;
+        width: 56px;
+        height: 56px;
         object-fit: contain;
         margin-right: 12px;
+        flex-shrink: 0; /* biar gambar nggak kecil pas teks panjang */
     }
     .quiz-card-label {
         font-weight: 600;
         color: #1e3a8a;
-        font-size: 0.875rem;
+        font-size: 0.95rem; /* naikin dikit biar selevel sama dashboard */
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
     /* Footer */
@@ -123,27 +127,30 @@
     <div class="max-w-6xl mx-auto">
         <h2 class="text-xl font-bold text-gray-800 text-center mb-6">SELECT QUIZ</h2>
         
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             @{
-                var quizList = new (string id, string label)[]
+                var quizList = new (string id, string formCode, string description)[]
                 {
-                    ("10", "FORMULIR EVALUASI UNTUK TM-QA-01 (PROFIL PERUSAHAAN DAN PROSES PRODUKSI)"),
-                    ("2", "FORMULIR EVALUASI UNTUK TM-QA-02 (KEBIJAKAN KUALITAS PERUSAHAAN)"),
-                    ("3", "FORMULIR EVALUASI UNTUK TM-QA-03 (PENGENALAN 5S DAN IMPLEMENTASINYA)"),
-                    ("4", "FORMULIR EVALUASI UNTUK TM-QA-04 (LINGKUNGAN)"),
-                    ("5", "FORMULIR EVALUASI UNTUK TM-QA-05 (PERSYARATAN DIE CASTING)"),
-                    ("6", "FORMULIR EVALUASI UNTUK TM-ADMIN-04 (KESEHATAN DAN KESELAMATAN KERJA)"),
-                    ("7", "FORMULIR EVALUASI UNTUK ORIENTASI KARYAWAN BARU"),
-                    ("8", "FORMULIR EVALUASI UNTUK PEDOMAN ETIKA USAHA DAN TATA PERILAKU DYNACAST")
+                    ("10", "FORM TM-QA-01", "PROFIL PERUSAHAAN DAN PROSES PRODUKSI"),
+                    ("2",  "FORM TM-QA-02", "KEBIJAKAN KUALITAS PERUSAHAAN"),
+                    ("3",  "FORM TM-QA-03", "PENGENALAN 5S DAN IMPLEMENTASINYA"),
+                    ("4",  "FORM TM-QA-04", "LINGKUNGAN"),
+                    ("5",  "FORM TM-QA-05", "PERSYARATAN DIE CASTING"),
+                    ("6",  "FORM TM-ADMIN-04", "KESEHATAN DAN KESELAMATAN KERJA"),
+                    ("7",  "FORM ORIENTASI", "ORIENTASI KARYAWAN BARU"),
+                    ("8",  "FORM ETIKA", "PEDOMAN ETIKA USAHA DAN TATA PERILAKU DYNACAST")
                 };
             }
 
-            @foreach (var (id, label) in quizList)
+        @foreach (var (id, formCode, description) in quizList)
             {
                 <a href="/Quiz/Record/@id" class="block">
                     <div class="quiz-card">
-                        <img src="~/Images/@(id).png" alt="@label" />
-                        <span class="quiz-card-label">@label</span>
+                        <img src="~/Images/@(id).png" alt="@formCode" />
+                        <div>
+                            <div class="font-semibold text-gray-800 text-sm">@formCode</div>
+                            <div class="text-xs text-gray-600 mt-1 line-clamp-2">@description</div>
+                        </div>
                     </div>
                 </a>
             }

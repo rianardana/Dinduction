@@ -1,0 +1,167 @@
+@model List<Dinduction.Web.Models.MasterTrainingVM>
+
+<div class="max-w-5xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">
+                    Master Training
+                </h1>
+                <p class="mt-1 text-sm text-gray-600">
+                    Manage training modules and evaluation forms
+                </p>
+            </div>
+
+            <a href="@Url.Action("Create", "Training")" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                    rounded-lg shadow-sm transition-all duration-200 hover:shadow-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                New Training
+            </a>
+        </div>
+    </div>
+
+    <!-- Content -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[200px]">
+                                Training Name
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[180px]">
+                                Form Code
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[100px]">
+                                Status
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[120px]">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-4 py-3 whitespace-normal">
+                                    <div class="group relative max-w-full">
+                                        <div class="text-sm font-semibold text-gray-900 line-clamp-2">
+                                            @item.TrainingName
+                                        </div>
+                                        <!-- Tooltip on hover -->
+                                        <div class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 z-10 w-max max-w-[300px]">
+                                            @item.TrainingName
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="px-4 py-3 whitespace-normal">
+                                    <div class="group relative max-w-full">
+                                        <div class="text-sm text-gray-700 font-mono line-clamp-2">
+                                            @item.EvaluationForm
+                                        </div>
+                                        <!-- Tooltip on hover -->
+                                        <div class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 z-10 w-max max-w-[300px]">
+                                            @item.EvaluationForm
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    @if (item.IsActive == true)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Inactive
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="@Url.Action("Edit", "Training", new { id = item.Id })"
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors duration-150 text-xs">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            Edit
+                                        </a>
+
+                                        @* Uncomment jika Delete sudah diimplementasi dengan konfirmasi JS *@
+                                        @*
+                                        <form asp-controller="Training" asp-action="Delete" asp-route-id="@item.Id" method="post" class="inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors duration-150 text-xs"
+                                                    onclick="return confirm('Are you sure you want to delete this training?')">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                                Delete
+                                            </button>
+                                        </form>
+                                        *@
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Stats Footer -->
+        <div class="mt-4 px-6 py-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="text-sm text-gray-600">
+                Total <span class="font-semibold text-gray-900">@Model.Count</span> training module(s)
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0v-3a2 2 0 00-2-2H5a2 2 0 00-2 2v3"/>
+            </svg>
+            <h3 class="mt-4 text-lg font-semibold text-gray-900">
+                No training modules yet
+            </h3>
+            <p class="mt-2 text-sm text-gray-600">
+                Get started by adding a new training module.
+            </p>
+            <div class="mt-6">
+                <a href="@Url.Action("Create", "Training")" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                        rounded-lg shadow-sm transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Create First Training
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="mt-8 text-center">
+    <a href="@Url.Action("Index", "Home")"
+       class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 text-sm font-semibold
+              rounded-lg shadow-sm transition-all duration-200">
+        <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Back to Home
+    </a>
+</div>

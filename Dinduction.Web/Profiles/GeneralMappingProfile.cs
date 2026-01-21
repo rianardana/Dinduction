@@ -26,6 +26,24 @@ public class GeneralMappingProfile : Profile
                 .ForMember(dest => dest.TrainerName,
                     opt => opt.MapFrom(src => src.User != null ? src.User.EmployeeName : string.Empty));
         CreateMap<TrainerVM, Trainer>();
+
+        CreateMap<MasterTraining, MasterTrainingVM>();
+        CreateMap<MasterTrainingVM, MasterTraining>();
+
+        CreateMap<ParticipantUser, ParticipantUserVM>()
+        .ForMember(dest => dest.TrainingName, 
+            opt => opt.MapFrom(src => src.Training != null ? src.Training.TrainingName : null))
+        .ForMember(dest => dest.TrainerName, 
+            opt => opt.MapFrom(src => src.Trainer != null && src.Trainer.User != null 
+                ? src.Trainer.User.EmployeeName 
+                : null))
+        .ForMember(dest => dest.UserName, 
+            opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null))
+        .ForMember(dest => dest.EmployeeName, 
+            opt => opt.MapFrom(src => src.User != null ? src.User.EmployeeName : null))
+        .ForMember(dest => dest.Department, 
+            opt => opt.MapFrom(src => src.User != null ? src.User.Department : null));
+
+        CreateMap<ParticipantUserVM, ParticipantUser>();
     }
-    
 }

@@ -1,7 +1,6 @@
-
 using Dinduction.Application.Interfaces;
-using System.Linq.Expressions;
 using Dinduction.Domain.Entities;
+using System.Linq.Expressions;
 
 namespace Dinduction.Infrastructure.Services;
 
@@ -29,14 +28,14 @@ public class RoleService : IRoleService
     {
         if (obj == null) throw new ArgumentNullException(nameof(obj));
         _uow.Repository<Role>().Add(obj);
-        _uow.SaveChanges();
+        await _uow.SaveChangesAsync(); 
     }
 
     public async Task UpdateAsync(Role obj)
     {
         if (obj == null) throw new ArgumentNullException(nameof(obj));
         _uow.Repository<Role>().Update(obj);
-        _uow.SaveChanges();
+        await _uow.SaveChangesAsync(); 
     }
 
     public async Task DeleteAsync(int id)
@@ -45,7 +44,7 @@ public class RoleService : IRoleService
         if (role != null)
         {
             _uow.Repository<Role>().Delete(role);
-            _uow.SaveChanges();
+            await _uow.SaveChangesAsync(); 
         }
     }
 }
