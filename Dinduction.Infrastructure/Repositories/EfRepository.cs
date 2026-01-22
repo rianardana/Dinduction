@@ -70,5 +70,8 @@ namespace Dinduction.Infrastructure.Repositories
         {
             return _dbSet.AsNoTracking();
         }
+
+        
+    
     }
 }

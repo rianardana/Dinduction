@@ -37,6 +37,8 @@ builder.Services.AddScoped<ISectionService, SectionService>();
 builder.Services.AddScoped<ITrainerService, TrainerService>();
 builder.Services.AddScoped<ITrainingService, TrainingService>();
 builder.Services.AddScoped<IParticipantService, ParticipantService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IRecordTrainingService, RecordTrainingService>();
 
 var app = builder.Build();
 

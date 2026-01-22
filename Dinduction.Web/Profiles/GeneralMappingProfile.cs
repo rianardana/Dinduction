@@ -45,5 +45,15 @@ public class GeneralMappingProfile : Profile
             opt => opt.MapFrom(src => src.User != null ? src.User.Department : null));
 
         CreateMap<ParticipantUserVM, ParticipantUser>();
+
+        CreateMap<Question, QuestionVM>()
+    .ForMember(dest => dest.SectionName, opt => opt.MapFrom(src => src.Training != null && src.Training.Section != null ? src.Training.Section.SectionName : null))
+    .ForMember(dest => dest.TrainingName, opt => opt.MapFrom(src => src.Training != null ? src.Training.TrainingName : null));
+
+        CreateMap<QuestionVM, Question>();
+
+        
+        CreateMap<Answer, AnswerVM>();
+        CreateMap<AnswerVM, Answer>();
     }
 }

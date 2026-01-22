@@ -1,0 +1,101 @@
+@model IEnumerable<Dinduction.Web.Models.QuestionVM>
+
+<div class="max-w-6xl mx-auto px-4 py-6">
+
+    <!-- Page Header -->
+    <div class="mb-8 text-center">
+        <h1 class="text-2xl font-bold text-gray-900">
+            Master Question Table
+        </h1>
+    </div>
+
+    <!-- Content -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Section
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Training
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Number
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Question
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Image
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">@item.SectionName</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">@item.TrainingName</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">@item.Number</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">@item.QuestionTraining</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (!string.IsNullOrEmpty(item.ImageQuestion))
+                                    {
+                                        <img src="@Url.Content("~/Images/" + item.ImageQuestion)" 
+                                             alt="Question Image" 
+                                             class="max-w-16 h-auto rounded border border-gray-200" />
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Stats Footer -->
+        <div class="mt-4 px-6 py-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="text-sm text-gray-600">
+                Total <span class="font-semibold text-gray-900">@Model.Count()</span> question(s)
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <h3 class="mt-4 text-lg font-semibold text-gray-900">
+                No questions yet
+            </h3>
+            <p class="mt-2 text-sm text-gray-600">
+                Get started by adding new questions.
+            </p>
+        </div>
+    }
+
+    <!-- Back Button -->
+    <div class="mt-8 text-center">
+        <a href="@Url.Action("Index", "MasterTraining")"
+           class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded-lg shadow-sm transition-all duration-200">
+            <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Back to Training
+        </a>
+    </div>
+
+</div>
