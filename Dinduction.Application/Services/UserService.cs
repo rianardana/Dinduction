@@ -112,7 +112,7 @@ public class UserService : IUserService
     public async Task<string?> GetUserNameByIdAsync(int trainerId)
     {
         var user = await _uow.Repository<User>().GetByIdAsync(trainerId);
-        return user?.EmployeeName;
+        return user?.EmployeeName ?? "Unknown";
     }
 
     public async Task<int> CountUserTodayAsync()
@@ -179,6 +179,15 @@ public class UserService : IUserService
             return await _uow.Repository<User>().GetAsync(u => u.UserName == userName);
     }
 
+    public async Task<string> GetBadgeNumberByIdAsync(int userId)
+    {
+        var user = await Task.FromResult(
+            _uow.Repository<User>()
+                .Table()
+                .FirstOrDefault(u => u.Id == userId)
+        );
+        return user?.UserName ?? "N/a";
+    }
 
 
 }

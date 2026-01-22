@@ -29,6 +29,7 @@ public interface IUserService
     Task<User?> GetPasswordAsync(string username);
 
     Task<User?> GetByUserNameAsync(string userName);
+    Task<string> GetBadgeNumberByIdAsync(int userId);
     
 
 }

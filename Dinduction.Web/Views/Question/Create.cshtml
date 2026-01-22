@@ -1,0 +1,113 @@
+@model Dinduction.Web.Models.QuestionVM
+
+<div class="max-w-4xl mx-auto px-4 py-6">
+
+    <!-- Evaluation Form Header -->
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 bg-blue-50 p-3 rounded-lg border border-blue-200">
+            @Model.EvaluationForm
+        </h2>
+    </div>
+
+    <!-- Form -->
+    <form asp-action="Create" asp-controller="Question" method="post" enctype="multipart/form-data" class="space-y-6">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Number" />
+        <input type="hidden" asp-for="TrainingId" />
+
+        <!-- Validation Summary -->
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div class="text-red-700">
+                    <strong class="font-medium">Error!</strong>
+                    <ul class="mt-2 list-disc list-inside">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- Question Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">New Question</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label asp-for="QuestionTraining" class="block text-sm font-medium text-gray-700 mb-1">
+                        Question Text
+                    </label>
+                    <input asp-for="QuestionTraining" 
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                    <span asp-validation-for="QuestionTraining" class="text-red-600 text-sm mt-1 block"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Answers Section -->
+        @for (int i = 0; i < Model.Answers.Count; i++)
+        {
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Answer Options</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label asp-for="Answers[i].RightAnswer" class="block text-sm font-medium text-gray-700 mb-1">
+                            Correct Answer
+                        </label>
+                        <input asp-for="Answers[i].RightAnswer" 
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                        <span asp-validation-for="Answers[i].RightAnswer" class="text-red-600 text-sm mt-1 block"></span>
+                    </div>
+                    
+                    <div>
+                        <label asp-for="Answers[i].OptionA" class="block text-sm font-medium text-gray-700 mb-1">
+                            Option A
+                        </label>
+                        <input asp-for="Answers[i].OptionA" 
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                        <span asp-validation-for="Answers[i].OptionA" class="text-red-600 text-sm mt-1 block"></span>
+                    </div>
+                    
+                    <div>
+                        <label asp-for="Answers[i].OptionB" class="block text-sm font-medium text-gray-700 mb-1">
+                            Option B
+                        </label>
+                        <input asp-for="Answers[i].OptionB" 
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                        <span asp-validation-for="Answers[i].OptionB" class="text-red-600 text-sm mt-1 block"></span>
+                    </div>
+                    
+                    <div>
+                        <label asp-for="Answers[i].OptionC" class="block text-sm font-medium text-gray-700 mb-1">
+                            Option C
+                        </label>
+                        <input asp-for="Answers[i].OptionC" 
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                        <span asp-validation-for="Answers[i].OptionC" class="text-red-600 text-sm mt-1 block"></span>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
+            <a href="@Url.Action("Index", "MasterTraining")" 
+               class="inline-flex items-center justify-center px-4 py-2 border border-red-600 text-sm font-medium rounded-lg text-red-600 bg-white hover:bg-red-50">
+                Back to List
+            </a>
+            <button type="submit" 
+                    class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                Create Question
+            </button>
+        </div>
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

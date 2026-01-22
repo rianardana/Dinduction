@@ -28,5 +28,6 @@ namespace Dinduction.Application.Interfaces
         List<T> SqlQueryList(string sql);
         T? SqlQuery(string sql);
         IQueryable<T> Table();
+
     }
 }
