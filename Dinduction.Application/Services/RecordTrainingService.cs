@@ -170,44 +170,45 @@ namespace Dinduction.Infrastructure.Services
                     .Count(q => q.TrainingId == trainingId)
             );
 
-            var lastQuizNo = await Task.FromResult(
+            var quizRecords = await Task.FromResult(
                 _uow.Repository<VRecordMaster>()
                     .Table()
                     .Where(r => r.TrainingId == trainingId && r.ParticipantId == participantId)
-                    .Select(r => r.QuizNumber)
-                    .DefaultIfEmpty(0)
-                    .Max()
-            );
-
-            if (lastQuizNo == 0)
-                return QuizStatus.Start;
-
-            var answers = await Task.FromResult(
-                _uow.Repository<VRecordMaster>()
-                    .Table()
-                    .Where(r => r.TrainingId == trainingId &&
-                            r.ParticipantId == participantId &&
-                            r.QuizNumber == lastQuizNo)
                     .ToList()
             );
 
-            int answered = answers.Count;
-            int correct = answers.Count(a => a.IsTrue == true);
+            if (quizRecords.Count == 0)
+                return QuizStatus.Start;
+
+            var quizGroups = quizRecords.GroupBy(r => r.QuizNumber).OrderBy(g => g.Key);
+            var lastQuizGroup = quizGroups.Last();
+            var lastQuizNumber = lastQuizGroup.Key;
+            var answered = lastQuizGroup.Count();
+            var correct = lastQuizGroup.Count(a => a.IsTrue == true);
 
             if (answered < totalQuestions)
                 return QuizStatus.Continue;
 
-            double percentageWrong = ((double)(answered - correct) / totalQuestions) * 100;
+            // ✅ Hitung persentase BENAR
+            double percentageCorrect = ((double)correct / totalQuestions) * 100;
 
-            if (percentageWrong >= 20)
+            if (percentageCorrect >= 80)
             {
-                if (lastQuizNo == 1)
-                    return QuizStatus.Second;
-                else
-                    return QuizStatus.Done;
+                // Lulus
+                return QuizStatus.Done;
             }
-
-            return QuizStatus.Done;
+            else
+            {
+                // Gagal
+                if (lastQuizNumber == 1)
+                {
+                    return QuizStatus.Second;
+                }
+                else
+                {
+                    return QuizStatus.DoneFailed;
+                }
+            }
         }
 
         public async Task<int> GetFirstSecondAsync(int trainingId, int participantId)
@@ -762,6 +763,15 @@ namespace Dinduction.Infrastructure.Services
             }
 
             return results;
+        }
+
+        public async Task<RecordTraining> GetLastRecordByParticipantAsync(int participantId)
+        {
+            return await Task.FromResult(
+                _uow.Repository<RecordTraining>().Table().Where(r => r.ParticipantId == participantId)
+                    .OrderByDescending(r => r.RecordDate)
+                    .FirstOrDefault()
+            );
         }
 
     

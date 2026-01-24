@@ -123,9 +123,9 @@
             </div>
         </div>
 
-        <!-- Action Buttons -->
+       <!-- Action Buttons -->
         <div class="action-section">
-            <a href="@Url.Action("Index", "User")" class="btn btn-secondary">
+            <a href="@Url.Action("Index", "Quiz")" class="btn btn-secondary">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
                 </svg>
@@ -144,28 +144,28 @@
                     </div>
                     break;
                 case QuizStatus.Start:
-                    <button type="submit" class="btn btn-primary">
+                    <a href="@Url.Action("Test", "Quiz", new { trainingId = Model.Id, Number = 1, QuizNo = Model.QuizNo })" class="btn btn-primary">
                         Mulai Quiz
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                             <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
                         </svg>
-                    </button>
+                    </a>
                     break;
                 case QuizStatus.Continue:
-                    <button type="submit" class="btn btn-primary">
+                    <a href="@Url.Action("Continue", "Quiz", new { trainingId = Model.Id, QuizNo = Model.QuizNo })" class="btn btn-primary">
                         Lanjutkan Quiz
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                             <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
                         </svg>
-                    </button>
+                    </a>
                     break;
                 case QuizStatus.Second:
-                    <button type="submit" class="btn btn-primary">
+                    <a href="@Url.Action("Test", "Quiz", new { trainingId = Model.Id, Number = 1, QuizNo = Model.QuizNo + 1 })" class="btn btn-primary">
                         Quiz Kedua
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                             <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
                         </svg>
-                    </button>
+                    </a>
                     break;
                 case QuizStatus.Done:
                     <div class="alert-box success">
@@ -173,6 +173,15 @@
                             <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
                         </svg>
                         <span>Quiz telah selesai. Terima kasih!</span>
+                    </div>
+                    break;
+                case QuizStatus.DoneFailed:
+                    <div class="alert-box failed">
+                        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                        </svg>
+                        <span>Anda telah gagal dalam 2 kali percobaan quiz.</span>
                     </div>
                     break;
             }
@@ -497,7 +506,12 @@
     .btn-secondary:active {
         background: #f8f9ff;
     }
-
+    
+    .alert-box.failed {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+    }
     /* Alert Box */
     .alert-box {
         padding: 14px 16px;

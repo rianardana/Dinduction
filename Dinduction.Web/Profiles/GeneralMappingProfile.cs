@@ -55,5 +55,10 @@ public class GeneralMappingProfile : Profile
         
         CreateMap<Answer, AnswerVM>();
         CreateMap<AnswerVM, Answer>();
+
+        CreateMap<VQuestionAnswer, ViewQuestionAnswerVM>();
+        CreateMap<RecordTrainingVM, RecordTraining>()
+        .ForMember(dest => dest.Id, opt => opt.Ignore())
+        .ForMember(dest => dest.Score, opt => opt.Ignore());
     }
 }

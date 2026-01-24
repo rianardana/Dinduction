@@ -109,14 +109,17 @@ public class ParticipantService : IParticipantService
         );
     }
 
+
     public async Task<bool> IsTrainerInputAsync(int userId, int trainingId)
     {
-        return await Task.FromResult(
-            _uow.Repository<ParticipantUser>().Table()
-                .Any(c => c.UserId == userId && c.TrainingId == trainingId)
+        
+        var exists = await Task.FromResult(
+            _uow.Repository<ParticipantUser>()
+                .Table()
+                .Any(p => p.UserId == userId && p.TrainingId == trainingId && p.TrainerId.HasValue)
         );
+        return exists;
     }
-
     public async Task<int> CountParticipantAsync(int trainerId)
     {
         var today = DateTime.Today;
