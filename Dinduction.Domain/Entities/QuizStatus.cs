@@ -7,5 +7,6 @@ public enum QuizStatus
     Start,
     Continue,
     Second,
-    Done
+    Done,
+    DoneFailed
 }

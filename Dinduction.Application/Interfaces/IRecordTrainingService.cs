@@ -43,5 +43,6 @@ namespace Dinduction.Application.Interfaces
         Task<QuizStatus> GetQuizStatusAsync(int trainingId, int participantId);
         Task<bool> CheckPassedPreviousAsync(int trainingId, int participantId, int prevQuizNo);
         Task<List<VRecordMaster>> GetLatestResultByParticipantAsync(int participantId);
+        Task<RecordTraining> GetLastRecordByParticipantAsync(int participantId);
     }
 }

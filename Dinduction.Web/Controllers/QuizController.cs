@@ -66,21 +66,53 @@ public class QuizController : Controller
             var countQuestion = await _questionService.GetTotalQuestionAsync(id);
             
             var participantId = await _participantService.GetParticipantAsync(userId);
-            //var lastQuizNo = await _recordService.GetLastQuizNoAsync(participantId, id);
-          //  var quizStatus = await _recordService.GetQuizStatusAsync(id, participantId);
+            var lastQuizNo = await _recordService.GetLastQuizNoAsync(participantId, id);
+            
+            bool trainerAllowed = await _participantService.IsTrainerInputAsync(userId, id);
+            QuizStatus quizStatus;
+            
+            if (!trainerAllowed)
+            {
+                quizStatus = QuizStatus.Blocked;
+            }
+            else
+            {
+                quizStatus = await _recordService.GetQuizStatusAsync(id, participantId);
+            }
             
             bool exist = await _recordService.CheckExistingAsync(id, participantId);
-            bool trainerAllowed = await _participantService.IsTrainerInputAsync(userId, id);
+
+        
+            int quizNo;
+            if (lastQuizNo == 0)
+            {
+                
+                quizNo = 1;
+            }
+            else
+            {
+                
+                if (quizStatus == QuizStatus.Second)
+                {
+                    
+                    quizNo = lastQuizNo + 1;
+                }
+                else
+                {
+                    
+                    quizNo = lastQuizNo;
+                }
+            }
 
             model = _mapper.Map<MasterTrainingVM>(training);
             model.TrainingDate = DateTime.Now;
             model.EmployeeName = user;
-            model.EmployeeNumber = "12345";
-            model.QuizNo = 5;
+            model.EmployeeNumber = badge;
+            model.QuizNo = quizNo;
 
             TempData["ParticipantId"] = participantId;
             TempData["QuestionCount"] = countQuestion;
-           // TempData["QuizStatus"] = quizStatus.ToString();
+            TempData["QuizStatus"] = quizStatus.ToString();
 
             return View(model);
         }
@@ -112,6 +144,8 @@ public class QuizController : Controller
             model.TrainingId = trainingId;
             model.QuizNumber = quizNo;
 
+            ViewBag.TotalQuestions = await _questionService.GetTotalQuestionAsync(trainingId);
+
             var options = new List<AnswerOptionVM>
             {
                 new AnswerOptionVM { Key = "RightAnswer", Text = model.RightAnswer, ImagePath = model.ImageRight },
@@ -132,11 +166,15 @@ public class QuizController : Controller
         }
     }
 
+
     // POST: Quiz/Test
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Test(RecordTrainingVM model)
     {
+        int number = 0;
+        int trainingId = 0;
+
         try
         {
             var userId = GetCurrentUserId();
@@ -144,10 +182,10 @@ public class QuizController : Controller
 
             var participantId = await _participantService.GetParticipantAsync(userId);
             var questionId = model.Id;
-            var trainingId = await _questionService.GetTrainingIdAsync(questionId);
+            trainingId = await _questionService.GetTrainingIdAsync(questionId);
             var totalQuestion = await _questionService.GetTotalQuestionAsync(trainingId);
             var quizNo = model.QuizNumber;
-            var number = await _questionService.GetNumberAsync(questionId);
+            number = await _questionService.GetNumberAsync(questionId);
             var trainerId = await _participantService.GetTrainerIdByUserAndTrainingAsync(userId, trainingId);
 
             var exists = await _recordService.CheckAnsweredAsync(participantId, trainingId, quizNo, number);
@@ -169,9 +207,18 @@ public class QuizController : Controller
 
             await _recordService.InsertAsync(entity);
 
-            // Cari nomor berikutnya
+            
             var answeredNumbers = await _recordService.GetAnswerAsync(participantId, trainingId, quizNo);
-            int nextNumber = FindNextUnansweredNumber(number, totalQuestion, answeredNumbers);
+            int nextNumber = -1;
+
+            for (int i = 1; i <= totalQuestion; i++)
+            {
+                if (!answeredNumbers.Contains(i))
+                {
+                    nextNumber = i;
+                    break;
+                }
+            }
 
             if (nextNumber == -1)
             {
@@ -183,10 +230,15 @@ public class QuizController : Controller
         catch (Exception ex)
         {
             ModelState.AddModelError("", ex.Message);
-            return View(model);
+            
+        
+            return RedirectToAction("Test", new { 
+                trainingId = trainingId, 
+                Number = number, 
+                QuizNo = model.QuizNumber 
+            });
         }
     }
-
     // Helper method
     private int FindNextUnansweredNumber(int currentNumber, int totalQuestion, List<int> answeredNumbers)
     {
@@ -283,23 +335,35 @@ public class QuizController : Controller
             if (userId == 0) return RedirectToAction("Login", "Account");
 
             var participantId = await _participantService.GetParticipantAsync(userId);
-            var data = await _recordService.GetByParticipantIdAsync(participantId);
             
-            if (data != null)
+            // ✅ Ambil data user
+            var user = await _userService.GetUserNameByIdAsync(userId);
+            var badge = await _userService.GetBadgeNumberByIdAsync(userId);
+            
+            // ✅ Ambil data training terakhir
+            var lastRecord = await _recordService.GetLastRecordByParticipantAsync(participantId);
+            string trainingName = "Training Tidak Diketahui";
+            
+            if (lastRecord != null)
             {
-                model = _mapper.Map<ViewRecordTrainingVM>(data);
+                var training = await _trainingService.GetByIdAsync(lastRecord.TrainingId.Value);
+                trainingName = training?.TrainingName ?? "Training Tidak Diketahui";
             }
 
+            
+            model.EmployeeName = user ?? badge ?? "Peserta";
+            model.TrainingName = trainingName;
+        
             return View(model);
         }
         catch (Exception ex)
         {
             ModelState.AddModelError("", ex.Message);
+            model.EmployeeName = "Peserta";
+            model.TrainingName = "Training Tidak Diketahui";
             return View(model);
         }
-        
     }
-
     [HttpPost]
     public async Task<JsonResult> DeleteRecord(int participantId, int trainingId, int quizNumber)
     {
