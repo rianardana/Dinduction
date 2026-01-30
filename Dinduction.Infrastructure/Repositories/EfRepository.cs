@@ -71,7 +71,31 @@ namespace Dinduction.Infrastructure.Repositories
             return _dbSet.AsNoTracking();
         }
 
+        // Repository.cs - Implementation
+    public async Task<List<T>> GetAllWithIncludesAsync(Expression<Func<T, bool>>? predicate = null,Expression<Func<T, object>>? orderBy = null,params string[] includeProperties)
+    {
+        IQueryable<T> query = _dbSet;
+        
+        
+        foreach (var includeProperty in includeProperties)
+        {
+            query = query.Include(includeProperty);
+        }
         
     
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+        
+    
+        if (orderBy != null)
+        {
+            query = query.OrderBy(orderBy);
+        }
+        
+        return await query.ToListAsync();
+    }
+        
     }
 }

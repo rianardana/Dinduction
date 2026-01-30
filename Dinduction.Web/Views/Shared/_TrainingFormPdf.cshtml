@@ -1,0 +1,290 @@
+@model Dinduction.Web.Models.ParticipantUserVM
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        /* PDF Training Form Styles */
+        .pdf-training-form {
+            font-family: 'Arial', sans-serif;
+            font-size: 11px;
+            line-height: 1.3;
+            color: #000;
+            margin: 0;
+            padding: 15px;
+            max-width: 800px;
+        }
+
+        /* Header Section */
+        .form-header {
+            margin-bottom: 20px;
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        .header-table td {
+            border: 1px solid #000;
+            padding: 5px 8px;
+            vertical-align: top;
+        }
+
+        .header-label {
+            font-weight: bold;
+            white-space: nowrap;
+            width: 25%;
+        }
+
+        .header-value {
+            width: 75%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checkbox-box {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000;
+            display: inline-block;
+            text-align: center;
+            line-height: 10px;
+            font-size: 10px;
+        }
+
+        .checkbox-box.checked::after {
+            content: "✓";
+        }
+
+        /* Participants Table */
+        .participants-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .participants-table th,
+        .participants-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .participants-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        .participants-table th:nth-child(1) { width: 6%; }  /* S/N */
+        .participants-table th:nth-child(2) { width: 22%; } /* Employee Name */
+        .participants-table th:nth-child(3) { width: 15%; } /* Employee ID */
+        .participants-table th:nth-child(4) { width: 15%; } /* Dept */
+        .participants-table th:nth-child(5) { width: 18%; } /* Signature */
+        .participants-table th:nth-child(6) { width: 24%; } /* Remarks/Attendance */
+
+        .participants-table td {
+            height: 30px;
+        }
+
+        /* Evaluation Section */
+        .evaluation-section {
+            margin-top: 20px;
+        }
+
+        .evaluation-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .evaluation-content {
+            border: 1px solid #000;
+            min-height: 100px;
+            padding: 8px;
+        }
+
+        /* Page Setup for PDF */
+        @@page {
+            size: A4;
+            margin: 1cm;
+        }
+
+        @@media print {
+            .pdf-training-form {
+                padding: 0;
+            }
+
+            .participants-table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-training-form">
+        <!-- Header Section -->
+        <div class="form-header">
+            <div class="form-title">TRAINING ATTENDANCE FORM</div>
+
+            <table class="header-table">
+                <tr>
+                    <td rowspan="3" style="width: 25%; vertical-align: top;">
+                        <div class="header-label">A) Type of training:</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <div class="checkbox-box @(ViewBag.TrainingType == "External" ? "checked" : "")"></div>
+                                <span>External Training</span>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-box @(ViewBag.TrainingType == "OnJob" ? "checked" : "")"></div>
+                                <span>On-job Training</span>
+                            </div>
+                            <div class="checkbox-item">
+                                <div class="checkbox-box @(ViewBag.TrainingType == "Internal" ? "checked" : "checked")"></div>
+                                <span>Internal Training</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="header-label" style="width: 25%;">Course / Name Training:</td>
+                    <td class="header-value" colspan="2">@SafeValue(Model.TrainingName)</td>
+                </tr>
+                <tr>
+                    <td class="header-label">Instructor:</td>
+                    <td class="header-label" style="width: 20%;">Commence Date:</td>
+                    <td class="header-value" style="width: 30%;">@SafeDate(Model.TrainingDate)</td>
+                </tr>
+                <tr>
+                    <td class="header-value">@SafeValue(Model.TrainerName)</td>
+                    <td class="header-label">Location:</td>
+                    <td class="header-value">@SafeValue(ViewBag.Location)</td>
+                </tr>
+                <tr>
+                    <td class="header-label">Certification ?</td>
+                    <td class="header-label">Duration of Training:</td>
+                    <td class="header-label" colspan="2">Cost (include GST?):</td>
+                </tr>
+                <tr>
+                    <td class="header-value">
+                        <div class="checkbox-box"></div>
+                    </td>
+                    <td class="header-value">@SafeValue(ViewBag.Duration)</td>
+                    <td class="header-value" colspan="2">@SafeValue(ViewBag.Cost)</td>
+                </tr>
+                <tr>
+                    <td class="header-label">Requested by:</td>
+                    <td class="header-value" colspan="3">@SafeValue(ViewBag.RequestedBy)</td>
+                </tr>
+                <tr>
+                    <td class="header-label">Approved by:</td>
+                    <td class="header-label">Sign / Date:</td>
+                    <td class="header-value" colspan="2"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Participants Table -->
+        <table class="participants-table">
+            <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Employee Name (full name)</th>
+                    <th>Employee ID</th>
+                    <th>Dept</th>
+                    <th>Signature</th>
+                    <th>Remarks/Attendance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Participants != null && Model.Participants.Any())
+                {
+                    var counter = 1;
+                    foreach (var participant in Model.Participants)
+                    {
+                        <tr>
+                            <td>@counter</td>
+                            <td>@SafeValue(participant.EmployeeName)</td>
+                            <td>@SafeValue(participant.UserName)</td>
+                            <td>@SafeValue(participant.Department)</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        counter++;
+                    }
+
+                    <!-- Fill remaining empty rows to make total 15 rows -->
+                    for (int i = counter; i <= 15; i++)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <!-- Empty rows (15 total) -->
+                    for (int i = 1; i <= 15; i++)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <!-- Evaluation Section -->
+        <div class="evaluation-section">
+            <div class="evaluation-label">B) Evaluation:</div>
+            <div class="evaluation-content"></div>
+        </div>
+    </div>
+</body>
+</html>
+
+@functions {
+    private string SafeValue(string value)
+    {
+        return !string.IsNullOrWhiteSpace(value) ? value : "N/A";
+    }
+
+    private string SafeDate(DateTime? date)
+    {
+        if (!date.HasValue || date.Value == DateTime.MinValue)
+            return "N/A";
+        
+        return date.Value.ToString("dd-MMM-yyyy");
+    }
+}

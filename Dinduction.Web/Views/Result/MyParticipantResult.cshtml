@@ -1,0 +1,311 @@
+@model IEnumerable<Dinduction.Web.Models.ViewRecordMasterVM>
+@{
+    ViewData["Title"] = "My Participant Result";
+    Layout = "_Layout";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Participant Result</h1>
+            <p class="text-gray-600 mt-2">Track and manage your participants' training progress</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-700">
+                <h2 class="text-xl font-semibold text-white">Participant Overview</h2>
+            </div>
+            
+            <div class="p-6">
+                <table id="tblMaster" class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Record Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress Quiz</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-red-500 uppercase tracking-wider">Failed</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-8 mb-6">
+            <a href="@Url.Action("Index", "Home")" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Back to Home
+            </a>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- CDN SEMUA -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" />
+
+    <script>
+$(document).ready(function () {
+    const notyf = new Notyf({
+        duration: 3000,
+        position: { x: 'right', y: 'top' },
+        ripple: true
+    });
+
+    var table = $('#tblMaster').DataTable({
+        "ajax": {
+            "url": "@Url.Action("CustomServerSide", "Result")",
+            "type": "POST"
+        },
+        "columns": [
+            {
+                "className": 'details-control',
+                "data": null,
+                "defaultContent": '',
+                "orderable": false
+            },
+            { "data": "employeeName" },
+            {
+                "data": "recordDate",
+                "render": function (data) {
+                    if (data) {
+                        var dt = new Date(data);
+                        var day = String(dt.getDate()).padStart(2, '0');
+                        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        var month = monthNames[dt.getMonth()];
+                        var year = dt.getFullYear();
+                        return `${day}-${month}-${year}`;
+                    }
+                    return "";
+                }
+            },
+            {
+                "data": "trainingSummary",
+                "render": function (data) {
+                    if (data) {
+                        var parts = data.split('/');
+                        if (parts.length === 2) {
+                            var completed = parseInt(parts[0]);
+                            var total = parseInt(parts[1]);
+                            if (!isNaN(completed) && !isNaN(total) && total > 0) {
+                                var percentage = (completed / total) * 100;
+                                return `
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-green-600 h-2.5 rounded-full" style="width: ${percentage}%"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-1">${completed}/${total} completed</div>
+                                `;
+                            }
+                        }
+                    }
+                    return '<div class="text-xs text-gray-400">No data</div>';
+                }
+            },
+            {
+                "data": "failed",
+                "render": function (data) {
+                    if (data === 0) {
+                        return '<span class="text-gray-400">-</span>';
+                    } else {
+                        return `<span class="text-red-600 font-semibold">${data}</span>`;
+                    }
+                }
+            }
+        ],
+        "language": {
+            "emptyTable": "No participant data available",
+            "loadingRecords": "Loading...",
+            "processing": "Processing..."
+        }
+    });
+
+    $('#tblMaster tbody').on('click', 'td.details-control', function () {
+        var tr = $(this).closest('tr');
+        var row = table.row(tr);
+        var data = row.data();
+
+        if (row.child.isShown()) {
+            $('div.childWrap', row.child()).slideUp(function () {
+                tr.removeClass('shown');
+                row.child.hide();
+            });
+        } else {
+            var participantId = data.participantId;
+            var trainingId = data.trainingId;
+            
+            if (!participantId || !trainingId) {
+                console.error('Invalid ', data);
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetDetailsById", "Result")',
+                type: 'GET',
+                data: {
+                    participantId: participantId,
+                    trainerId: '@ViewBag.TrainerId'
+                },
+                success: function (response) {
+                    if (response.data && response.data.length > 0) {
+                        row.child(renderChild(response, notyf), 'no-padding').show();
+                        tr.addClass('shown');
+                        $('div.childWrap', row.child()).slideDown();
+                    } else {
+                        notyf.error('No training details found');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    notyf.error('Failed to load details');
+                }
+            });
+        }
+    });
+});
+
+function renderChild(data, notyf) {
+    var wrapper = $('<div class="p-4 bg-gray-50 rounded-lg mt-4 childWrap"></div>');
+    var result = [];
+
+    $.each(data.data, function (i, v) {
+        var statusIcon = v.score >= 80
+            ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Passed</span>'
+            : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Failed</span>';
+
+        var deleteBtn = "";
+        if (v.quizNumber >= 2 && v.score < 80) {
+            deleteBtn = `<button class="btn-delete-visible px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors duration-200"
+                    data-participantid="${v.participantId}"
+                    data-trainingid="${v.trainingId}"
+                    data-quiznumber="${v.quizNumber}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>`;
+        }
+
+        result.push(`
+            <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 text-sm font-medium text-gray-900">${v.trainingName}</td>
+                <td class="py-3 px-4 text-sm text-gray-700">${v.score}</td>
+                <td class="py-3 px-4">${statusIcon}</td>
+                <td class="py-3 px-4">${deleteBtn}</td>
+            </tr>
+        `);
+    });
+
+    var cTable = `
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${result.join('')}
+                </tbody>
+            </table>
+        </div>`;
+
+    wrapper.append(cTable);
+
+    // ✅ Event handler untuk delete button dengan Notyf
+    wrapper.find(".btn-delete-visible").on("click", function () {
+        var participantId = $(this).data("participantid");
+        var trainingId = $(this).data("trainingid");
+        var quizNumber = $(this).data("quiznumber");
+        var btn = $(this);
+
+    
+        if (confirm("Are you sure you want to delete this quiz attempt?")) {
+            // ✅ Disable button saat loading
+            btn.prop('disabled', true).html('<svg class="animate-spin h-4 w-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>');
+
+            $.ajax({
+                url: "/Quiz/DeleteRecord",
+                type: "POST",
+                data: {
+                    participantId: participantId,
+                    trainingId: trainingId,
+                    quizNumber: quizNumber
+                },
+                success: function (res) {
+                    if (res.success) {
+                        notyf.success(res.message || "Record deleted successfully!");
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        notyf.error(res.message || "Failed to delete record.");
+                        btn.prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Delete error:', error);
+                    notyf.error("Server error occurred.");
+                    btn.prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>');
+                }
+            });
+        }
+    });
+
+    return wrapper;
+}
+    </script>
+
+    <style>
+        td.details-control {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%233b82f6" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>') no-repeat center center;
+            cursor: pointer;
+            width: 30px;
+            padding: 8px !important;
+        }
+        
+        tr.shown td.details-control {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%233b82f6" viewBox="0 0 16 16"><path d="M8.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/></svg>') no-repeat center center;
+        }
+
+        #tblMaster_wrapper {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        #tblMaster thead th {
+            background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        #tblMaster tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        #tblMaster tbody td {
+            padding: 1rem 1rem;
+            color: #4b5563;
+        }
+
+        .btn-delete-visible {
+        background-color: #ef4444 !important;
+        background-image: none !important;
+        -webkit-appearance: none !important;
+        border: none !important;
+        color: white !important;
+        }
+
+        .btn-delete-visible:hover {
+            background-color: #dc2626 !important;
+        }
+    </style>
+}
