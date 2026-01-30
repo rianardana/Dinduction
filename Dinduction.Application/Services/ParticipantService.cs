@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Dinduction.Application.DTOs;
 using Dinduction.Application.Interfaces;
@@ -160,20 +161,55 @@ public class ParticipantService : IParticipantService
         );
     }
 
+    // public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
+    // {
+    //     var targetDate = date.Date;
+    //     var query = _uow.Repository<ParticipantUser>().Table().Where(c => c.TrainerId == trainerId);
+    //     if (trainingId == 0)
+    //     {
+    //         return await Task.FromResult(
+    //             query.Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate).ToList()
+    //         );
+    //     }
+    //     return await Task.FromResult(
+    //         query.Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate && c.TrainingId == trainingId).ToList()
+    //     );
+    // }
+
     public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
     {
         var targetDate = date.Date;
-        var query = _uow.Repository<ParticipantUser>().Table().Where(c => c.TrainerId == trainerId);
+        
+        Expression<Func<ParticipantUser, bool>> predicate;
+        
         if (trainingId == 0)
         {
-            return await Task.FromResult(
-                query.Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate).ToList()
-            );
+            predicate = c => c.TrainerId == trainerId 
+                && c.TrainingDate.HasValue 
+                && c.TrainingDate.Value.Date == targetDate;
         }
-        return await Task.FromResult(
-            query.Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate && c.TrainingId == trainingId).ToList()
-        );
+        else
+        {
+            predicate = c => c.TrainerId == trainerId 
+                && c.TrainingDate.HasValue 
+                && c.TrainingDate.Value.Date == targetDate 
+                && c.TrainingId == trainingId;
+        }
+        
+        // ✅ Include dengan string path (support ThenInclude)
+        var data = await _uow.Repository<ParticipantUser>()
+            .GetAllWithIncludesAsync(predicate: predicate,orderBy: null,includeProperties: new[]
+                {
+                    "User",           // Include User
+                    "Training",       // Include Training
+                    "Trainer",        // Include Trainer
+                    "Trainer.User"    // ✅ ThenInclude Trainer.User
+                }
+            );
+        
+        return data;
     }
+
 
     public async Task<List<DateTime>> GetTrainingDatesAsync()
     {
@@ -190,7 +226,8 @@ public class ParticipantService : IParticipantService
 
     public async Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId)
     {
-        var dates = await Task.FromResult(
+        
+        var dates = await Task.Run(() => 
             _uow.Repository<ParticipantUser>().Table()
                 .Where(t => t.TrainerId == trainerId && t.TrainingDate.HasValue)
                 .Select(t => t.TrainingDate.Value.Date)
@@ -231,29 +268,64 @@ public class ParticipantService : IParticipantService
 
         public async Task<List<TrainingDateDTO>> GetTrainingGroupedByDateByTrainerAsync(int trainerId)
         {
-            var all = await Task.FromResult(
+            var result = await Task.Run(() =>
                 _uow.Repository<ParticipantUser>().Table()
                     .Where(t => t.TrainerId == trainerId && t.TrainingDate.HasValue && t.TrainingId.HasValue)
+                    .GroupBy(t => t.TrainingDate.Value.Date)
+                    .Select(g => new TrainingDateDTO
+                    {
+                        Date = g.Key,
+                        Trainings = g
+                            .GroupBy(p => p.TrainingId.Value)
+                            .Select(tg => new TrainingDto
+                            {
+                                TrainingId = tg.Key,
+                                TrainingName = tg.FirstOrDefault().Training.TrainingName,
+                                TrainingDate = g.Key
+                            })
+                            .ToList()
+                    })
+                    .OrderBy(dto => dto.Date)
                     .ToList()
             );
 
-            return all
-                .GroupBy(p => p.TrainingDate.Value.Date)
-                .Select(g => new TrainingDateDTO
-                {
-                    Date = g.Key,
-                    Trainings = g
-                        .GroupBy(p => p.TrainingId.Value)
-                        .Select(tg => new TrainingDto
-                        {
-                            TrainingId = tg.Key,
-                            // ✅ FIX DI SINI:
-                            TrainingName = tg.FirstOrDefault()?.Training?.TrainingName ?? "Unknown",
-                            TrainingDate = g.Key
-                        })
-                        .ToList()
-                })
-                .OrderBy(dto => dto.Date)
-                .ToList();
+            return result;
+        }
+
+        public async Task<List<ParticipantUser>> GetByTrainerWithDetailsAsync(
+            int trainerId, 
+            DateTime date, 
+            int? trainingId = null)
+        {
+            // ✅ Build predicate
+            Expression<Func<ParticipantUser, bool>> predicate;
+
+            if (trainingId.HasValue && trainingId.Value != 0)
+            {
+                predicate = p => p.TrainerId == trainerId
+                    && p.TrainingDate.HasValue
+                    && p.TrainingDate.Value.Date == date.Date
+                    && p.TrainingId == trainingId.Value;
+            }
+            else
+            {
+                predicate = p => p.TrainerId == trainerId
+                    && p.TrainingDate.HasValue
+                    && p.TrainingDate.Value.Date == date.Date;
+            }
+
+            // ✅ Pakai GetAllWithIncludesAsync - NO NEED EntityFrameworkCore using!
+            return await _uow.Repository<ParticipantUser>()
+                .GetAllWithIncludesAsync(
+                    predicate: predicate,
+                    orderBy: null,
+                    includeProperties: new[]
+                    {
+                        "User",
+                        "Training",
+                        "Trainer",
+                        "Trainer.User"
+                    }
+                );
         }
 }

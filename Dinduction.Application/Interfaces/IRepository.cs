@@ -28,6 +28,7 @@ namespace Dinduction.Application.Interfaces
         List<T> SqlQueryList(string sql);
         T? SqlQuery(string sql);
         IQueryable<T> Table();
+        Task<List<T>> GetAllWithIncludesAsync(Expression<Func<T, bool>>? predicate = null,Expression<Func<T, object>>? orderBy = null,params string[] includeProperties);
 
     }
 }

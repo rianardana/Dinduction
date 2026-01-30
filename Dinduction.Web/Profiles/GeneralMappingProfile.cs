@@ -60,5 +60,22 @@ public class GeneralMappingProfile : Profile
         CreateMap<RecordTrainingVM, RecordTraining>()
         .ForMember(dest => dest.Id, opt => opt.Ignore())
         .ForMember(dest => dest.Score, opt => opt.Ignore());
+
+        CreateMap<VRecordMaster, ViewRecordMasterVM>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.ParticipantId, opt => opt.MapFrom(src => src.ParticipantId))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.EmployeeName))
+            .ForMember(dest => dest.TrainingId, opt => opt.MapFrom(src => src.TrainingId))
+            .ForMember(dest => dest.TrainingName, opt => opt.MapFrom(src => src.TrainingName))
+            .ForMember(dest => dest.IsTrue, opt => opt.MapFrom(src => src.IsTrue))
+            .ForMember(dest => dest.RecordDate, opt => opt.MapFrom(src => src.RecordDate))
+            .ForMember(dest => dest.QuizNumber, opt => opt.MapFrom(src => src.QuizNumber))
+            .ForMember(dest => dest.TrainerId, opt => opt.MapFrom(src => src.TrainerId))
+            .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
+            .ForMember(dest => dest.TotalTrainingCount, opt => opt.Ignore()) // Di-set manual
+            .ForMember(dest => dest.CompletedTrainingCount, opt => opt.Ignore()) // Di-set manual
+            .ForMember(dest => dest.Failed, opt => opt.Ignore()); // Di-set manual
+    
     }
 }
