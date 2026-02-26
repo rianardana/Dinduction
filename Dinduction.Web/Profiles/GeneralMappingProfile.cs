@@ -12,8 +12,18 @@ public class GeneralMappingProfile : Profile
         CreateMap<Role, RoleVM>();
         CreateMap<RoleVM, Role>();
 
-        CreateMap<User, UserVM>();
-        CreateMap<UserVM, User>();
+        CreateMap<User, UserVM>()
+        .ForMember(dest => dest.CurrentPassword, opt => opt.Ignore())
+        .ForMember(dest => dest.NewPassword, opt => opt.Ignore())
+        .ForMember(dest => dest.ConfNewPassword, opt => opt.Ignore())
+        .ForMember(dest => dest.ListRole, opt => opt.Ignore())
+        .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.RoleName : string.Empty))
+        .ForMember(dest => dest.TrainingType, opt => opt.MapFrom(src => src.TrainingType ?? "I"));;
+
+    CreateMap<UserVM, User>()
+        .ForMember(dest => dest.Password, opt => opt.Ignore()) 
+        .ForMember(dest => dest.Role, opt => opt.Ignore())
+        .ForMember(dest => dest.TrainingType, opt => opt.MapFrom(src => !string.IsNullOrEmpty(src.TrainingType) ? src.TrainingType : "I"));
 
         CreateMap<Section, SectionVM>();
         CreateMap<SectionVM, Section>();
@@ -76,6 +86,16 @@ public class GeneralMappingProfile : Profile
             .ForMember(dest => dest.TotalTrainingCount, opt => opt.Ignore()) // Di-set manual
             .ForMember(dest => dest.CompletedTrainingCount, opt => opt.Ignore()) // Di-set manual
             .ForMember(dest => dest.Failed, opt => opt.Ignore()); // Di-set manual
+
+        CreateMap<LearningMaterial, LearningMaterialVM>()
+        .ForMember(dest => dest.TrainingName, 
+            opt => opt.MapFrom(src => src.Training != null ? src.Training.TrainingName : string.Empty))
+        .ForMember(dest => dest.ListTraining, opt => opt.Ignore())
+        .ForMember(dest => dest.IsCompleted, opt => opt.Ignore()); // Calculated in controller
+
+        CreateMap<LearningMaterialVM, LearningMaterial>()
+        .ForMember(dest => dest.Training, opt => opt.Ignore())
+        .ForMember(dest => dest.UserLearningProgresses, opt => opt.Ignore());
     
     }
 }

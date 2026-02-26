@@ -1,0 +1,223 @@
+@{
+    ViewData["Title"] = "Monthly Participant Report";
+    Layout = "_Layout";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-500 p-3 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Monthly Participant Report</h1>
+                    <p class="text-gray-500 mt-1">Track participant attendance by month</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="bg-white rounded-2xl shadow-md p-6 mb-6 border border-gray-100">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Year</label>
+                    <select id="yearSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm">
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                        <option value="2029">2029</option>
+                        <option value="2030">2030</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Card -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+            <div class="px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600">
+                <h2 class="text-xl font-semibold text-white">Participant Statistics</h2>
+            </div>
+            <div class="p-6">
+                <div class="h-96">
+                    <canvas id="trainingChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center mt-8 mb-6">
+            <a href="@Url.Action("Index", "Home")" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+let trainingChartInstance = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const currentYear = new Date().getFullYear();
+    const yearSelect = document.getElementById('yearSelect');
+    
+    if (currentYear >= 2025 && currentYear <= 2030) {
+        yearSelect.value = currentYear.toString();
+    } else {
+        yearSelect.value = '2025';
+    }
+    
+    loadMonthlyTrainingChart(yearSelect.value);
+    
+    yearSelect.addEventListener('change', function() {
+        loadMonthlyTrainingChart(this.value);
+    });
+});
+
+function loadMonthlyTrainingChart(year) {
+    fetch('@Url.Action("PopulateParticipant", "Dashboard")?year=' + year)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('HTTP error! status: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(response => {
+            console.log('Response data:', response);
+            
+            if (response.error) {
+                console.error('Chart error:', response.error);
+                alert('Error loading data: ' + response.error);
+                return;
+            }
+            
+            if (!response.data) {
+                console.error('No data in response');
+                alert('No data received from server');
+                return;
+            }
+            
+            const data = response.data;
+            const ctx = document.getElementById('trainingChart');
+            
+            if (!ctx) {
+                console.error('Canvas element not found');
+                return;
+            }
+            
+            // Destroy previous chart if exists
+            if (trainingChartInstance && typeof trainingChartInstance.destroy === 'function') {
+                trainingChartInstance.destroy();
+                trainingChartInstance = null;
+            }
+            
+            // Create new chart
+            trainingChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: data.datasetLabels ? data.datasetLabels[0] : 'Participants',
+                        data: data.datasetDatas ? data.datasetDatas[0] : [],
+                        backgroundColor: data.Colors ? data.Colors[0] : 'rgba(34, 197, 94, 0.8)',
+                        borderColor: data.colors ? data.colors[0] : 'rgba(34, 197, 94, 1)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 12,
+                                    family: 'Inter, sans-serif'
+                                },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                            titleFont: {
+                                size: 14,
+                                family: 'Inter, sans-serif'
+                            },
+                            bodyFont: {
+                                size: 12,
+                                family: 'Inter, sans-serif'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month',
+                                font: {
+                                    size: 14,
+                                    family: 'Inter, sans-serif',
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Inter, sans-serif'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Participants',
+                                font: {
+                                    size: 14,
+                                    family: 'Inter, sans-serif',
+                                    weight: 'bold'
+                                }
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    family: 'Inter, sans-serif'
+                                },
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+            
+            console.log('Chart created successfully');
+        })
+        .catch(error => {
+            console.error('Failed to load chart data:', error);
+            alert('Failed to load participant data: ' + error.message);
+        });
+}
+    </script>
+}

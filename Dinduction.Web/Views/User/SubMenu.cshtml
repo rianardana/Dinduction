@@ -1,0 +1,129 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <a href="/User/Upload" class="block">
+                        <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-blue-50">
+                            <div class="flex items-center">
+                                <img src="~/Images/participant.png" alt="Participant" class="card-image" />
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-lg">Upload User</h3>
+                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Upload peserta training menggunakan template excel.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/User/UserWeekly" class="block">
+                        <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-green-50">
+                            <div class="flex items-center">
+                                <img src="~/Images/dashboard.png" alt="Result" class="card-image" />
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-lg">User This Week</h3>
+                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Lihat peserta training dalam minggu ini</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/User/Index" class="block">
+                        <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-purple-50">
+                            <div class="flex items-center">
+                                <img src="~/Images/result.png" alt="Report" class="card-image" />
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-lg">Account non user</h3>
+                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Akun selain user, untuk melihat akun admin dan trainer</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+</div>
+
+<div class="text-center mt-8 mb-6">
+            <a href="@Url.Action("Index", "Home")" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Back to Home
+            </a>
+</div>
+
+<style>
+        body {
+            background-color: #f8fafc;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            transition: all 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07);
+        }
+
+        /* Header Minimalis */
+        .header-bar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+        .header-title {
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+        .logout-link {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .logout-link:hover {
+            color: #2563eb;
+        }
+        .logout-icon {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 1.7;
+            transition: transform 0.2s ease;
+        }
+        .logout-link:hover .logout-icon {
+            transform: translateX(-2px);
+        }
+
+        /* Card User Info */
+        .user-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px auto 24px;
+            max-width: 500px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+        }
+        .user-card h5 {
+            font-weight: 600;
+            margin: 0;
+            color: #1e3a8a;
+        }
+        .user-card p {
+            margin: 4px 0 0;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        /* Gambar Card */
+        .card-image {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            margin-right: 12px;
+        }
+
+    }
+    </style>

@@ -1,7 +1,9 @@
 // Dinduction.Application/Services/UserService.cs
-using Dinduction.Application.Interfaces;
-
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using Dinduction.Application.Interfaces;
 using Dinduction.Domain.Entities;
 
 namespace Dinduction.Application.Services;
@@ -20,11 +22,14 @@ public class UserService : IUserService
         return await _uow.Repository<User>().GetAllAsync(orderBy: u => u.UserName);
     }
 
-    public async Task<List<User>> GetAdminTrainerAsync()
+   public async Task<List<User>> GetAdminTrainerAsync()
     {
-        return await _uow.Repository<User>().GetAllAsync(
-            predicate: u => u.RoleId != 2,
-            orderBy: u => u.UserName);
+        return await _uow.Repository<User>()
+            .GetAllAsync(
+                predicate: u => u.RoleId != 2,
+                orderBy: u => u.UserName,
+                includes: new Expression<Func<User, object>>[] { u => u.Role! }
+            );
     }
 
     public async Task<List<User>> GetWeeklyAsync()

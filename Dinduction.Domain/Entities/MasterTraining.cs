@@ -32,6 +32,7 @@ public partial class MasterTraining
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
 
     public virtual ICollection<RecordTraining> RecordTrainings { get; set; } = new List<RecordTraining>();
+     public virtual ICollection<LearningMaterial> LearningMaterials { get; set; } = new List<LearningMaterial>();
 
     public virtual Section? Section { get; set; }
 }

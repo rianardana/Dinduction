@@ -1,0 +1,171 @@
+@* @model Dinduction.Web.ViewModels.MasterTraining.MasterTrainingVM
+@{
+    ViewData["Title"] = "Create New Master Training";
+    Layout = "_Layout";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-500 p-3 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Create New Master Training</h1>
+                    <p class="text-gray-500 mt-1">Add new training form to the system</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                
+                <div asp-validation-summary="ModelOnly" class="mb-6 text-red-600"></div>
+
+                <!-- Section & Registration Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- Section -->
+                    <div>
+                        <label asp-for="SectionId" class="block text-sm font-medium text-gray-700 mb-2">
+                            Section <span class="text-red-500">*</span>
+                        </label>
+                        <select asp-for="SectionId" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm">
+                            <option value="">-- Select Section --</option>
+                            @if (Model?.MasterList != null)
+                            {
+                                @foreach (var section in Model.MasterList)
+                                {
+                                    <option value="@section.Value">@section.Text</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="SectionId" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+
+                    <!-- Form Number -->
+                    <div>
+                        <label asp-for="FormNumberRegistration" class="block text-sm font-medium text-gray-700 mb-2">
+                            Form Number <span class="text-red-500">*</span>
+                        </label>
+                        <input asp-for="FormNumberRegistration" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                               placeholder="Enter form number" />
+                        <span asp-validation-for="FormNumberRegistration" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+
+                    <!-- Form Date -->
+                    <div>
+                        <label asp-for="FormDateRegistration" class="block text-sm font-medium text-gray-700 mb-2">
+                            Form Date <span class="text-red-500">*</span>
+                        </label>
+                        <input asp-for="FormDateRegistration" 
+                               type="date"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm" />
+                        <span asp-validation-for="FormDateRegistration" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+                </div>
+
+                <!-- Training Name -->
+                <div class="mb-6">
+                    <label asp-for="TrainingName" class="block text-sm font-medium text-gray-700 mb-2">
+                        Training Name <span class="text-red-500">*</span>
+                    </label>
+                    <input asp-for="TrainingName" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                           placeholder="Enter training name" />
+                    <span asp-validation-for="TrainingName" class="text-red-500 text-sm mt-1 block"></span>
+                </div>
+
+                <!-- Evaluation Form -->
+                <div class="mb-6">
+                    <label asp-for="EvaluationForm" class="block text-sm font-medium text-gray-700 mb-2">
+                        Evaluation Form <span class="text-red-500">*</span>
+                    </label>
+                    <input asp-for="EvaluationForm" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                           placeholder="Enter evaluation form" />
+                    <span asp-validation-for="EvaluationForm" class="text-red-500 text-sm mt-1 block"></span>
+                </div>
+
+                <!-- Purpose 1 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label asp-for="Purpose1" class="block text-sm font-medium text-gray-700 mb-2">
+                            Purpose 1 (Indonesian)
+                        </label>
+                        <input asp-for="Purpose1" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                               placeholder="Enter purpose in Indonesian" />
+                        <span asp-validation-for="Purpose1" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+                    <div>
+                        <label asp-for="PurposeEnglish1" class="block text-sm font-medium text-gray-700 mb-2">
+                            Purpose 1 (English)
+                        </label>
+                        <input asp-for="PurposeEnglish1" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                               placeholder="Enter purpose in English" />
+                        <span asp-validation-for="PurposeEnglish1" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+                </div>
+
+                <!-- Purpose 2 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label asp-for="Purpose2" class="block text-sm font-medium text-gray-700 mb-2">
+                            Purpose 2 (Indonesian)
+                        </label>
+                        <input asp-for="Purpose2" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                               placeholder="Enter purpose in Indonesian" />
+                        <span asp-validation-for="Purpose2" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+                    <div>
+                        <label asp-for="PurposeEnglish2" class="block text-sm font-medium text-gray-700 mb-2">
+                            Purpose 2 (English)
+                        </label>
+                        <input asp-for="PurposeEnglish2" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                               placeholder="Enter purpose in English" />
+                        <span asp-validation-for="PurposeEnglish2" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                    <a asp-action="Index" 
+                       class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 text-center">
+                        Back to List
+                    </a>
+                    <button type="submit" 
+                            class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                        Create Training
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    
+    <script>
+$(document).ready(function () {
+    $('form').on('submit', function () {
+        if ($(this).valid()) {
+            $('button[type="submit"]').prop('disabled', true).text('Creating...');
+        }
+    });
+});
+    </script>
+} *@

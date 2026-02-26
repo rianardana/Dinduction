@@ -391,10 +391,6 @@ namespace Dinduction.Web.Controllers
             }
         }
 
-        // ============================================
-        // AJAX - GET TRAININGS BY DATE - ADMIN
-        // ============================================
-
         public async Task<JsonResult> GetTrainingsByDate(string date)
         {
             if (!DateTime.TryParse(date, out var targetDate))
@@ -402,32 +398,28 @@ namespace Dinduction.Web.Controllers
 
             try
             {
-                var groupedTrainings = await _participantService.GetTrainingGroupedByDateAsync();
-                var trainings = groupedTrainings
-                    .Where(t => t.Date == targetDate.Date)
-                    .SelectMany(t => t.Trainings)
-                    .Select(tr => new
+            
+                var participants = await _participantService.GetPresenceAsync(targetDate, 0);
+                
+            
+                var trainings = participants
+                    .Where(p => p.Training != null)
+                    .Select(p => new
                     {
-                        Value = tr.TrainingId,
-                        Text = tr.TrainingName
+                        Value = p.TrainingId,
+                        Text = p.Training.TrainingName ?? "Unknown"
                     })
+                    .DistinctBy(t => t.Value) 
                     .ToList();
 
                 return Json(trainings);
             }
             catch (Exception ex)
             {
-                return Json(new { error = ex.Message, data = new List<object>() });
+                Console.WriteLine($"Error in GetTrainingsByDate: {ex.Message}");
+                return Json(new List<object>());
             }
         }
-
-        // ============================================
-        // AJAX - GET TRAININGS BY DATE - TRAINER
-        // ============================================
-
-       // ============================================
-// AJAX - GET TRAININGS BY DATE - TRAINER
-// ============================================
 
         public async Task<IActionResult> GetTrainingsByDateByTrainer(string date)
         {

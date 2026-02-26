@@ -39,6 +39,7 @@ builder.Services.AddScoped<ITrainingService, TrainingService>();
 builder.Services.AddScoped<IParticipantService, ParticipantService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IRecordTrainingService, RecordTrainingService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 var app = builder.Build();
 

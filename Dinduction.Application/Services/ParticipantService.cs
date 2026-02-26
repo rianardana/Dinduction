@@ -143,22 +143,56 @@ public class ParticipantService : IParticipantService
         return userIds;
     }
 
+    // public async Task<List<ParticipantUser>> GetPresenceAsync(DateTime date, int trainingId)
+    // {
+    //     var targetDate = date.Date;
+    //     if (trainingId == 0)
+    //     {
+    //         return await Task.FromResult(
+    //             _uow.Repository<ParticipantUser>().Table()
+    //                 .Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate)
+    //                 .ToList()
+    //         );
+    //     }
+    //     return await Task.FromResult(
+    //         _uow.Repository<ParticipantUser>().Table()
+    //             .Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate && c.TrainingId == trainingId)
+    //             .ToList()
+    //     );
+    // }
+
     public async Task<List<ParticipantUser>> GetPresenceAsync(DateTime date, int trainingId)
     {
         var targetDate = date.Date;
+        
+        Expression<Func<ParticipantUser, bool>> predicate;
+        
         if (trainingId == 0)
         {
-            return await Task.FromResult(
-                _uow.Repository<ParticipantUser>().Table()
-                    .Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate)
-                    .ToList()
-            );
+            predicate = c => c.TrainingDate.HasValue 
+                && c.TrainingDate.Value.Date == targetDate;
         }
-        return await Task.FromResult(
-            _uow.Repository<ParticipantUser>().Table()
-                .Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate && c.TrainingId == trainingId)
-                .ToList()
-        );
+        else
+        {
+            predicate = c => c.TrainingDate.HasValue 
+                && c.TrainingDate.Value.Date == targetDate 
+                && c.TrainingId == trainingId;
+        }
+        
+    
+        var data = await _uow.Repository<ParticipantUser>()
+            .GetAllWithIncludesAsync(
+                predicate: predicate,
+                orderBy: null,
+                includeProperties: new[]
+                {
+                    "User",          
+                    "Training",       
+                    "Trainer"         
+                }
+            );
+        
+        return data;
     }
 
     // public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
@@ -196,14 +230,14 @@ public class ParticipantService : IParticipantService
                 && c.TrainingId == trainingId;
         }
         
-        // ✅ Include dengan string path (support ThenInclude)
+        
         var data = await _uow.Repository<ParticipantUser>()
             .GetAllWithIncludesAsync(predicate: predicate,orderBy: null,includeProperties: new[]
                 {
-                    "User",           // Include User
-                    "Training",       // Include Training
-                    "Trainer",        // Include Trainer
-                    "Trainer.User"    // ✅ ThenInclude Trainer.User
+                    "User",          
+                    "Training",       
+                    "Trainer",        
+                    "Trainer.User"    
                 }
             );
         

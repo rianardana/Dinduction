@@ -1,0 +1,173 @@
+@model Dinduction.Web.Models.UserVM
+@{
+    ViewData["Title"] = "Create New User";
+    Layout = "_Layout";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-500 p-3 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Create New User</h1>
+                    <p class="text-gray-500 mt-1">Add new user to the system</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                
+                <div asp-validation-summary="ModelOnly" class="mb-6 text-red-600"></div>
+
+                <!-- Username -->
+                <div class="mb-6">
+                    <label asp-for="UserName" class="block text-sm font-medium text-gray-700 mb-2">
+                        Username <span class="text-red-500">*</span>
+                    </label>
+                    <input asp-for="UserName" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                           placeholder="Enter username" />
+                    <span asp-validation-for="UserName" class="text-red-500 text-sm mt-1 block"></span>
+                </div>
+
+                <!-- Employee Name -->
+                <div class="mb-6">
+                    <label asp-for="EmployeeName" class="block text-sm font-medium text-gray-700 mb-2">
+                        Employee Name <span class="text-red-500">*</span>
+                    </label>
+                    <input asp-for="EmployeeName" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                           placeholder="Enter employee name" />
+                    <span asp-validation-for="EmployeeName" class="text-red-500 text-sm mt-1 block"></span>
+                </div>
+
+
+                    <div class="mb-6">
+                    <label asp-for="Department" class="block text-sm font-medium text-gray-700 mb-2">
+                        Department <span class="text-red-500"></span>
+                    </label>
+                    <input asp-for="Department" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+                           placeholder="Enter department name" />
+                    <span asp-validation-for="Department" class="text-red-500 text-sm mt-1 block"></span>
+                </div>
+
+
+
+
+                <!-- Role -->
+                <div class="mb-6">
+                    <label asp-for="RoleId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Role <span class="text-red-500">*</span>
+                    </label>
+                    <select asp-for="RoleId" 
+                            id="RoleId"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm">
+                       
+                        @if (Model?.ListRole != null)
+                        {
+                            @foreach (var role in Model.ListRole)
+                            {
+                                <option value="@role.Value">@role.Text</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="RoleId" class="text-red-500 text-sm mt-1 block"></span>
+                </div>
+                                <!-- Training Type Dropdown (Only for User Role) -->
+                <div id="trainingTypeSection" class="hidden mb-6">
+                    <label asp-for="TrainingType" class="block text-sm font-medium text-gray-700 mb-2">
+                        Training Type <span class="text-red-500">*</span>
+                    </label>
+                    <select asp-for="TrainingType" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm">
+                        <option value="I">Induction</option>
+                        <option value="R">Refresh</option>
+                    </select>
+                    <span asp-validation-for="TrainingType" class="text-red-500 text-sm mt-1 block"></span>
+                    <p class="text-xs text-gray-500 mt-1">I = Induction (New Hire), R = Refresh (Annual)</p>
+                </div>
+                <!-- Training Period (Conditional) -->
+                <div id="trainingPeriod" class="hidden">
+                    <!-- Start Training -->
+                    <div class="mb-6">
+                        <label asp-for="StartTraining" class="block text-sm font-medium text-gray-700 mb-2">
+                            Start Training
+                        </label>
+                        <input asp-for="StartTraining" 
+                               type="date"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm" />
+                        <span asp-validation-for="StartTraining" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+
+                    <!-- End Training -->
+                    <div class="mb-6">
+                        <label asp-for="EndTraining" class="block text-sm font-medium text-gray-700 mb-2">
+                            End Training
+                        </label>
+                        <input asp-for="EndTraining" 
+                               type="date"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm" />
+                        <span asp-validation-for="EndTraining" class="text-red-500 text-sm mt-1 block"></span>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                    <a asp-action="Index" 
+                       class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 text-center">
+                        Back to List
+                    </a>
+                    <button type="submit" 
+                            class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                        Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            function toggleTrainingFields() {
+                var selectedRole = $('#RoleId').val();
+                if (parseInt(selectedRole) === 2) {
+                    $('#trainingPeriod').removeClass('hidden');
+                    $('#trainingTypeSection').removeClass('hidden');
+                } else {
+                    $('#trainingPeriod').addClass('hidden');
+                    $('#trainingTypeSection').addClass('hidden');
+                }
+            }
+            
+            // Initial check
+            toggleTrainingFields();
+            
+            // On change
+            $('#RoleId').on('change', toggleTrainingFields);
+        });
+
+            $('form').on('submit', function () {
+                if ($(this).valid()) {
+                    // Disable button saat submit
+                    $('button[type="submit"]').prop('disabled', true).text('Creating...');
+                }
+            });
+    </script>
+}
