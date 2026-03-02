@@ -83,19 +83,23 @@ public class GeneralMappingProfile : Profile
             .ForMember(dest => dest.QuizNumber, opt => opt.MapFrom(src => src.QuizNumber))
             .ForMember(dest => dest.TrainerId, opt => opt.MapFrom(src => src.TrainerId))
             .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
-            .ForMember(dest => dest.TotalTrainingCount, opt => opt.Ignore()) // Di-set manual
-            .ForMember(dest => dest.CompletedTrainingCount, opt => opt.Ignore()) // Di-set manual
-            .ForMember(dest => dest.Failed, opt => opt.Ignore()); // Di-set manual
+            .ForMember(dest => dest.TotalTrainingCount, opt => opt.Ignore()) 
+            .ForMember(dest => dest.CompletedTrainingCount, opt => opt.Ignore()) 
+            .ForMember(dest => dest.Failed, opt => opt.Ignore()); 
 
         CreateMap<LearningMaterial, LearningMaterialVM>()
-        .ForMember(dest => dest.TrainingName, 
-            opt => opt.MapFrom(src => src.Training != null ? src.Training.TrainingName : string.Empty))
-        .ForMember(dest => dest.ListTraining, opt => opt.Ignore())
-        .ForMember(dest => dest.IsCompleted, opt => opt.Ignore()); // Calculated in controller
+            .ForMember(d => d.TrainingName, opt => opt.MapFrom(s => s.Training != null ? s.Training.TrainingName : null))
+            .ForMember(d => d.CreatedDate, opt => opt.MapFrom(s => DateTime.Now)); 
+            
+        CreateMap<LearningMaterialUploadVM, LearningMaterial>()
+            .ForMember(d => d.FilePath, opt => opt.Ignore()); 
 
-        CreateMap<LearningMaterialVM, LearningMaterial>()
-        .ForMember(dest => dest.Training, opt => opt.Ignore())
-        .ForMember(dest => dest.UserLearningProgresses, opt => opt.Ignore());
+        // === USER SIDE ===
+        CreateMap<LearningMaterial, UserLearningMaterialVM>()
+            .ForMember(d => d.Title, opt => opt.MapFrom(s => 
+                !string.IsNullOrEmpty(s.FilePath) ? Path.GetFileNameWithoutExtension(s.FilePath) : "Untitled"));
+                
+        CreateMap<MasterTraining, LearningStudyVM>();
     
     }
 }

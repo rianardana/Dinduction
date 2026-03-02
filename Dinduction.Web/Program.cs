@@ -39,6 +39,8 @@ builder.Services.AddScoped<ITrainingService, TrainingService>();
 builder.Services.AddScoped<IParticipantService, ParticipantService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IRecordTrainingService, RecordTrainingService>();
+builder.Services.AddScoped<ILearningMaterialService, LearningMaterialService>();
+builder.Services.AddScoped<IUserLearningProgressService, UserLearningProgressService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 var app = builder.Build();
@@ -52,6 +54,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 
 // Session

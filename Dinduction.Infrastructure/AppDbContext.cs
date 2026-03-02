@@ -293,7 +293,7 @@ public partial class AppDbContext : DbContext
         
         modelBuilder.Entity<LearningMaterial>(entity =>
         {
-            entity.ToTable("LearningMaterials");
+            entity.ToTable("LearningMaterial");
             entity.HasOne(d => d.Training).WithMany(p => p.LearningMaterials)
                 .HasForeignKey(d => d.TrainingId)
                 .OnDelete(DeleteBehavior.Cascade);

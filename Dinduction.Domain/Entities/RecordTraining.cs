@@ -24,9 +24,9 @@ public partial class RecordTraining
     public int? QuizNumber { get; set; }
 
     public int? TrainerId { get; set; }
-    public string StepType { get; set; }
+    public string? StepType { get; set; }
    
-   public string TrainingType { get; set; }
+    public string? TrainingType { get; set; }
 
     public virtual ParticipantUser? Participant { get; set; }
 

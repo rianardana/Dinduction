@@ -5,6 +5,31 @@
 <script src="~/lib/notyf/notyf.min.js"></script>
 
 <div class="mobile-quiz-container">
+
+    <div class="mb-6">
+    @if (ViewBag.QuizType == "PreTest")
+    {
+        <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+            <h3 class="font-semibold text-amber-900 text-lg">🎯 Pre-Test Assessment</h3>
+            <p class="text-sm text-amber-700 mt-1">@ViewBag.QuizNote</p>
+        </div>
+    }
+    else if (ViewBag.QuizType == "PostTest")
+    {
+        <div class="p-4 bg-purple-50 border-l-4 border-purple-500 rounded-r-lg">
+            <h3 class="font-semibold text-purple-900 text-lg">📋 Post-Test Evaluation</h3>
+            <p class="text-sm text-purple-700 mt-1">@ViewBag.QuizNote</p>
+        </div>
+    }
+    else
+    {
+        <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+            <h3 class="font-semibold text-blue-900 text-lg">📝 Quiz Questions</h3>
+            <p class="text-sm text-blue-700 mt-1">@ViewBag.QuizNote</p>
+        </div>
+    }
+</div>
+
     @using (Html.BeginForm("Test", "Quiz", FormMethod.Post, new { id = "quizForm", enctype = "multipart/form-data" }))
     {
         @Html.AntiForgeryToken()

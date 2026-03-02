@@ -1,9 +1,10 @@
-
+// Dinduction.Web/Models/LearningMaterialAdminVM.cs
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Dinduction.Web.Models;
 
+// ✅ Untuk List/Edit di Admin Panel
 public class LearningMaterialVM
 {
     public int Id { get; set; }
@@ -13,14 +14,14 @@ public class LearningMaterialVM
     public int TrainingId { get; set; }
 
     [Display(Name = "Training Name")]
-    public string TrainingName { get; set; }
+    public string? TrainingName { get; set; } // ✅ Computed from join
 
     [Display(Name = "Material Title")]
     [Required(ErrorMessage = "Title is required")]
-    public string Title { get; set; }
+    public string? Title { get; set; } // ✅ Bisa dari nama file atau input manual
 
     [Display(Name = "File Path")]
-    public string FilePath { get; set; }
+    public string? FilePath { get; set; }
 
     [Display(Name = "Is Active")]
     public bool IsActive { get; set; } = true;
@@ -28,25 +29,11 @@ public class LearningMaterialVM
     [Display(Name = "Created Date")]
     public DateTime CreatedDate { get; set; }
 
-    // ✅ Untuk tracking progress user
-    [Display(Name = "Completed")]
-    public bool IsCompleted { get; set; }
-
-    // ✅ Dropdown helper
-    public SelectList ListTraining { get; set; }
+    // ✅ Untuk admin dropdown
+    public SelectList? ListTraining { get; set; }
 }
 
-public class LearningMaterialDetailVM
-{
-    public int Id { get; set; }
-    public string Title { get; set; }
-    public string FilePath { get; set; }
-    public string TrainingName { get; set; }
-    public bool IsCompleted { get; set; }
-    public int TrainingYear { get; set; } = DateTime.Now.Year;
-}
-
-
+// ✅ Untuk Upload/Create materi baru
 public class LearningMaterialUploadVM
 {
     [Display(Name = "Training")]
@@ -55,14 +42,14 @@ public class LearningMaterialUploadVM
 
     [Display(Name = "Material Title")]
     [Required(ErrorMessage = "Title is required")]
-    public string Title { get; set; }
+    public string? Title { get; set; }
 
-    [Display(Name = "PDF File")]
-    [Required(ErrorMessage = "Please select a PDF file")]
-    public IFormFile FilePdf { get; set; }
+    [Display(Name = "PDF/Video File")]
+    [Required(ErrorMessage = "Please select a file")]
+    public IFormFile? File { get; set; }
 
     [Display(Name = "Is Active")]
     public bool IsActive { get; set; } = true;
     
-    public SelectList ListTraining { get; set; }
+    public SelectList? ListTraining { get; set; }
 }

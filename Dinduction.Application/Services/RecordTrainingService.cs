@@ -164,50 +164,57 @@ namespace Dinduction.Infrastructure.Services
             return nilai >= 80;
         }
 
-        public async Task<QuizStatus> GetQuizStatusAsync(int trainingId, int participantId)
+        public async Task<QuizStatus> GetQuizStatusAsync(int trainingId, int participantId, int quizNo)
         {
+            
             var totalQuestions = await Task.FromResult(
                 _uow.Repository<Question>()
                     .Table()
                     .Count(q => q.TrainingId == trainingId)
             );
 
+            
             var quizRecords = await Task.FromResult(
                 _uow.Repository<VRecordMaster>()
                     .Table()
-                    .Where(r => r.TrainingId == trainingId && r.ParticipantId == participantId)
+                    .Where(r => r.TrainingId == trainingId 
+                            && r.ParticipantId == participantId 
+                            && r.QuizNumber == quizNo)  
                     .ToList()
             );
 
+            
             if (quizRecords.Count == 0)
                 return QuizStatus.Start;
 
-            var quizGroups = quizRecords.GroupBy(r => r.QuizNumber).OrderBy(g => g.Key);
-            var lastQuizGroup = quizGroups.Last();
-            var lastQuizNumber = lastQuizGroup.Key;
-            var answered = lastQuizGroup.Count();
-            var correct = lastQuizGroup.Count(a => a.IsTrue == true);
+            
+            var answered = quizRecords.Count;
+            var correct = quizRecords.Count(a => a.IsTrue == true);
 
+        
             if (answered < totalQuestions)
                 return QuizStatus.Continue;
 
-            // ✅ Hitung persentase BENAR
+            
             double percentageCorrect = ((double)correct / totalQuestions) * 100;
 
+            
             if (percentageCorrect >= 80)
             {
-                // Lulus
+                
                 return QuizStatus.Done;
             }
             else
             {
-                // Gagal
-                if (lastQuizNumber == 1)
+                
+                if (quizNo == 1)
                 {
+                    
                     return QuizStatus.Second;
                 }
                 else
                 {
+                    
                     return QuizStatus.DoneFailed;
                 }
             }
@@ -993,7 +1000,17 @@ namespace Dinduction.Infrastructure.Services
             return result;
         }
 
-        
+       public async Task<bool> IsQuizCompletedAsync(int participantId, int trainingId, int quizNo)
+        {
+            var record = await _uow.Repository<RecordTraining>().GetAsync(
+                x => x.ParticipantId == participantId 
+                && x.TrainingId == trainingId 
+                && x.QuizNumber == quizNo
+            );
+            
+            return record != null; 
+        }
+                
 
     }
 }
