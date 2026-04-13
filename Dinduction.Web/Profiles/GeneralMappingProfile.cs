@@ -52,7 +52,9 @@ public class GeneralMappingProfile : Profile
         .ForMember(dest => dest.EmployeeName, 
             opt => opt.MapFrom(src => src.User != null ? src.User.EmployeeName : null))
         .ForMember(dest => dest.Department, 
-            opt => opt.MapFrom(src => src.User != null ? src.User.Department : null));
+            opt => opt.MapFrom(src => src.User != null ? src.User.Department : null))
+        .ForMember(dest => dest.TrainingType, 
+        opt => opt.MapFrom(src => src.User != null ? src.User.TrainingType : null));;
 
         CreateMap<ParticipantUserVM, ParticipantUser>();
 
@@ -85,7 +87,9 @@ public class GeneralMappingProfile : Profile
             .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
             .ForMember(dest => dest.TotalTrainingCount, opt => opt.Ignore()) 
             .ForMember(dest => dest.CompletedTrainingCount, opt => opt.Ignore()) 
-            .ForMember(dest => dest.Failed, opt => opt.Ignore()); 
+            .ForMember(dest => dest.Failed, opt => opt.Ignore())
+            .ForMember(dest => dest.TrainingType, opt => opt.MapFrom(src => src.TrainingType))
+            .ForMember(dest => dest.StepType, opt => opt.MapFrom(src => src.StepType));; 
 
         CreateMap<LearningMaterial, LearningMaterialVM>()
             .ForMember(d => d.TrainingName, opt => opt.MapFrom(s => s.Training != null ? s.Training.TrainingName : null))
@@ -100,6 +104,9 @@ public class GeneralMappingProfile : Profile
                 !string.IsNullOrEmpty(s.FilePath) ? Path.GetFileNameWithoutExtension(s.FilePath) : "Untitled"));
                 
         CreateMap<MasterTraining, LearningStudyVM>();
+        CreateMap<RefreshComparisonDto, RefreshComparisonVM>();
+        CreateMap<RefreshDetailDto, RefreshDetailVM>();
+        CreateMap<RefreshAttendanceDto, RefreshAttendanceVM>();
     
     }
 }

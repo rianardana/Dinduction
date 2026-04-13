@@ -18,6 +18,8 @@ public class ViewRecordMasterVM
         public string TrainingSummary => $"{CompletedTrainingCount} / {TotalTrainingCount}";
         public string TrainingProgress { get; set; }
         public int Failed { get; set; }
+        public string? TrainingType { get; set; }
+        public string? StepType { get; set; }
         
 
     }

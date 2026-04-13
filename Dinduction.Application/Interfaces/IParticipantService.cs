@@ -20,5 +20,9 @@ public interface IParticipantService
     Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId);
     Task<List<TrainingDateDTO>> GetTrainingGroupedByDateAsync();
     Task<List<TrainingDateDTO>> GetTrainingGroupedByDateByTrainerAsync(int trainerId);
+    Task<(List<ParticipantUser> participants, Dictionary<int, string> trainingTypes)> GetPresenceByTrainerWithTrainingTypeAsync(DateTime date, int trainingId, int trainerId);
+    Task<List<RefreshAttendanceDto>> GetRefreshPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId);
+    Task<List<DateTime>> GetTrainingDatesByTrainerAndTypeAsync(int trainerId, string trainingType);
+    
     
 }

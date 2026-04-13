@@ -210,7 +210,97 @@ public class ParticipantService : IParticipantService
     //     );
     // }
 
-    public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
+    // public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
+    // {
+    //     var targetDate = date.Date;
+        
+    //     Expression<Func<ParticipantUser, bool>> predicate;
+        
+    //     if (trainingId == 0)
+    //     {
+    //         predicate = c => c.TrainerId == trainerId 
+    //             && c.TrainingDate.HasValue 
+    //             && c.TrainingDate.Value.Date == targetDate;
+    //     }
+    //     else
+    //     {
+    //         predicate = c => c.TrainerId == trainerId 
+    //             && c.TrainingDate.HasValue 
+    //             && c.TrainingDate.Value.Date == targetDate 
+    //             && c.TrainingId == trainingId;
+    //     }
+        
+        
+    //     var data = await _uow.Repository<ParticipantUser>()
+    //         .GetAllWithIncludesAsync(predicate: predicate,orderBy: null,includeProperties: new[]
+    //             {
+    //                 "User",          
+    //                 "Training",       
+    //                 "Trainer",        
+    //                 "Trainer.User",
+    //                 "RecordTrainings",
+    //                 "RecordTrainings.TrainingType"    
+    //             }
+    //         );
+        
+    //     return data;
+    // }
+
+        public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
+        {
+            return await Task.Run(() =>
+            {
+                
+                var records = _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(r => r.TrainerId == trainerId
+                            && r.TrainingId == trainingId
+                            && r.TrainingType == "I"
+                            && (r.StepType == null || r.StepType == "Normal")
+                            && r.RecordDate.Value.Date == date.Date)
+                    .ToList();
+
+                if (!records.Any()) return new List<ParticipantUser>();
+
+                var participantIds = records
+                    .Select(r => r.ParticipantId)
+                    .Where(id => id.HasValue)
+                    .Select(id => id.Value)
+                    .Distinct()
+                    .ToList();
+
+                // Query participant & user terpisah
+                var participants = _uow.Repository<ParticipantUser>()
+                    .Table()
+                    .Where(p => participantIds.Contains(p.Id))
+                    .ToList();
+
+                var userIds = participants
+                    .Select(p => p.UserId)
+                    .Distinct()
+                    .ToList();
+
+                var users = _uow.Repository<User>()
+                    .Table()
+                    .Where(u => userIds.Contains(u.Id))
+                    .ToDictionary(u => u.Id, u => u);
+
+            
+                foreach (var participant in participants)
+                {
+                    if (users.ContainsKey(participant.UserId.Value))
+                    {
+                        participant.User = users[participant.UserId.Value];
+                    }
+                }
+
+                return participants;
+            });
+        }
+
+    
+    public async Task<(List<ParticipantUser> participants, Dictionary<int, string> trainingTypes)> 
+        GetPresenceByTrainerWithTrainingTypeAsync(DateTime date, int trainingId, int trainerId)
     {
         var targetDate = date.Date;
         
@@ -227,21 +317,60 @@ public class ParticipantService : IParticipantService
             predicate = c => c.TrainerId == trainerId 
                 && c.TrainingDate.HasValue 
                 && c.TrainingDate.Value.Date == targetDate 
-                && c.TrainingId == trainingId;
+                && c.TrainingId == trainingId
+                && c.User.TrainingType=="I";
         }
         
-        
-        var data = await _uow.Repository<ParticipantUser>()
-            .GetAllWithIncludesAsync(predicate: predicate,orderBy: null,includeProperties: new[]
-                {
-                    "User",          
-                    "Training",       
-                    "Trainer",        
-                    "Trainer.User"    
-                }
+        // 1. Ambil participants
+        var participants = await _uow.Repository<ParticipantUser>()
+            .GetAllWithIncludesAsync(
+                predicate: predicate,
+                orderBy: null,
+                includeProperties: new[] { "User", "Training", "Trainer" }
             );
         
-        return data;
+        // 2. Ambil TrainingType dari RecordTraining
+        var participantIds = participants.Select(p => p.Id).ToList();
+        var trainingTypes = new Dictionary<int, string>();
+        
+        if (participantIds.Any())
+        {
+            var trainingTypeList = _uow.Repository<RecordTraining>()
+                .Table()
+                .Where(r => participantIds.Contains(r.ParticipantId.Value) 
+                        && !string.IsNullOrEmpty(r.TrainingType))
+                .GroupBy(r => r.ParticipantId)
+                .Select(g => new { 
+                    ParticipantId = g.Key, 
+                    TrainingType = g.Select(r => r.TrainingType).FirstOrDefault() 
+                })
+                .ToList(); 
+            
+            trainingTypes = trainingTypeList
+                .Where(x => x.ParticipantId.HasValue)
+                .ToDictionary(
+                    x => x.ParticipantId.Value, 
+                    x => x.TrainingType
+                );
+        }
+        
+        // ParticipantService.cs - SEBELUM return
+
+            Console.WriteLine($"🔍 SERVICE: participants.Count = {participants.Count}");
+            Console.WriteLine($"🔍 SERVICE: trainingTypes.Count = {trainingTypes.Count}");
+
+            foreach (var kvp in trainingTypes)
+            {
+                Console.WriteLine($"🔍 SERVICE: trainingTypes[{kvp.Key}] = '{kvp.Value}'");
+            }
+
+            foreach (var p in participants)
+            {
+                Console.WriteLine($"🔍 SERVICE: Participant Id={p.Id}, UserId={p.UserId}");
+            }
+
+
+        return (participants, trainingTypes);
     }
 
 
@@ -259,18 +388,19 @@ public class ParticipantService : IParticipantService
     }
 
     public async Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId)
-    {
-        
-        var dates = await Task.Run(() => 
-            _uow.Repository<ParticipantUser>().Table()
-                .Where(t => t.TrainerId == trainerId && t.TrainingDate.HasValue)
-                .Select(t => t.TrainingDate.Value.Date)
-                .Distinct()
-                .OrderBy(d => d)
-                .ToList()
-        );
-        return dates;
-    }
+        {
+            return await Task.Run(() =>
+                _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(r => r.TrainerId == trainerId
+                            && r.TrainingType == "I"
+                            && (r.StepType == null || r.StepType == "Normal"))
+                    .ToList()
+                    .Select(r => r.RecordDate.Value.Date)
+                    .Distinct()
+                    .ToList()
+            );
+}
 
     public async Task<List<TrainingDateDTO>> GetTrainingGroupedByDateAsync()
 {
@@ -326,10 +456,7 @@ public class ParticipantService : IParticipantService
             return result;
         }
 
-        public async Task<List<ParticipantUser>> GetByTrainerWithDetailsAsync(
-            int trainerId, 
-            DateTime date, 
-            int? trainingId = null)
+        public async Task<List<ParticipantUser>> GetByTrainerWithDetailsAsync(int trainerId, DateTime date, int? trainingId = null)
         {
             // ✅ Build predicate
             Expression<Func<ParticipantUser, bool>> predicate;
@@ -361,5 +488,86 @@ public class ParticipantService : IParticipantService
                         "Trainer.User"
                     }
                 );
+
         }
+
+        public async Task<List<RefreshAttendanceDto>> GetRefreshPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
+        {
+            return await Task.Run(() =>
+            {
+                // Ambil semua RecordTraining untuk training ini
+                var records = _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(r => r.TrainerId == trainerId
+                            && r.TrainingId == trainingId
+                            && r.TrainingType == "R"
+                            && r.RecordDate.Value.Date == date.Date)
+                    .ToList();
+
+                // ✅ Define participantIds dari records
+                var participantIds = records
+                    .Select(r => r.ParticipantId)
+                    .Where(id => id.HasValue)
+                    .Select(id => id.Value)
+                    .Distinct()
+                    .ToList();
+
+                // Query participant & user terpisah
+                var participants = _uow.Repository<ParticipantUser>()
+                    .Table()
+                    .Where(p => participantIds.Contains(p.Id))
+                    .ToList();
+
+                var userIds = participants
+                    .Select(p => p.UserId)
+                    .Distinct()
+                    .ToList();
+
+                var users = _uow.Repository<User>()
+                    .Table()
+                    .Where(u => userIds.Contains(u.Id))
+                    .ToDictionary(u => u.Id, u => u);
+
+                var result = participantIds.Select(pid =>
+                {
+                    var participant = participants.FirstOrDefault(p => p.Id == pid);
+                    var user = participant != null && users.ContainsKey(participant.UserId.Value)
+                        ? users[participant.UserId.Value]
+                        : null;
+
+                    var participantRecords = records.Where(r => r.ParticipantId == pid).ToList();
+
+                    return new RefreshAttendanceDto
+                    {
+                        UserName     = user?.UserName ?? "-",
+                        EmployeeName = user?.EmployeeName ?? "-",
+                        Department   = user?.Department ?? "-",
+                        TrainingDate = date,
+                        TrainingType = "R",
+                        HasPreTest   = participantRecords.Any(r => r.StepType == "PreTest"),
+                        HasPostTest  = participantRecords.Any(r => r.StepType == "PostTest")
+                    };
+                })
+                .Where(r => r.IsPresent)
+                .OrderBy(r => r.EmployeeName)
+                .ToList();
+
+                return result;
+            });
+        }
+
+        public async Task<List<DateTime>> GetTrainingDatesByTrainerAndTypeAsync(int trainerId, string trainingType)
+        {
+            return await Task.Run(() =>
+                _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(r => r.TrainerId == trainerId && r.TrainingType == trainingType)
+                    .ToList()
+                    .Select(r => r.RecordDate.Value.Date)
+                    .Distinct()
+                    .ToList()
+            );
+        }     
+
+
 }

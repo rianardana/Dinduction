@@ -1,0 +1,325 @@
+@{
+    ViewData["Title"] = "My Refresh Result";
+    Layout = "_Layout";
+    var activePage = "Refresh"; // ← tandai halaman aktif
+}
+
+
+<!-- Toggle Navigation -->
+<div class="flex justify-center mb-6">
+    <div class="inline-flex rounded-xl shadow-sm bg-white border border-gray-200 p-1">
+        <a href="@Url.Action("MyParticipantResult", "Result")"
+           class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+           style="@(activePage == "Induction" ? "background-color:#2563eb; color:white; box-shadow:0 1px 2px rgba(0,0,0,0.1);" : "color:#6b7280;")">
+            &#127891; Induction
+        </a>
+        <a href="@Url.Action("MyRefreshResult", "Result")"
+           class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+           style="@(activePage == "Refresh" ? "background-color:#9333ea; color:white; box-shadow:0 1px 2px rgba(0,0,0,0.1);" : "color:#6b7280;")">
+            &#128260; Refresh
+        </a>
+    </div>
+</div>
+
+<div class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Refresh Result</h1>
+            <p class="text-gray-600 mt-2">Track PreTest vs PostTest scores for Refresh training participants</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+            <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-700 flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-white">Participant Overview</h2>
+                <span class="text-purple-200 text-sm font-medium">Training Type: Refresh</span>
+            </div>
+
+            <div class="p-6">
+                <table id="tblRefresh" class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Record Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PreTest &amp; PostTest Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-8 mb-6">
+        <a href="@Url.Action("Index", "Home")" class="inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+            <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Back to Home
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" />
+
+    <script>
+    $(document).ready(function () {
+        const notyf = new Notyf({
+            duration: 3000,
+            position: { x: 'right', y: 'top' },
+            ripple: true
+        });
+
+        var table = $('#tblRefresh').DataTable({
+            "ajax": {
+                "url": "@Url.Action("RefreshServerSide", "Result")",
+                "type": "POST"
+            },
+            "columns": [
+                {
+                    "className": 'details-control',
+                    "data": null,
+                    "defaultContent": '',
+                    "orderable": false
+                },
+                { "data": "employeeName" },
+                {
+                    "data": "recordDate",
+                    "render": function (data) {
+                        if (!data) return '-';
+                        var dt = new Date(data);
+                        var monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                        return `${String(dt.getDate()).padStart(2,'0')}-${monthNames[dt.getMonth()]}-${dt.getFullYear()}`;
+                    }
+                },
+                {
+                "data": null,
+                "render": function (data, type, row) {
+                    var preTotal  = row.totalTraining  || 0;
+                    var postTotal = row.totalTraining  || 0;
+                    var preDone   = row.preTestDone    || 0;
+                    var postPass  = row.postTestPassed || 0;
+
+                    return `
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                                🟦 PreTest ${preDone}/${preTotal}
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                                🟩 PostTest ${postPass}/${postTotal} passed
+                            </span>
+                        </div>
+                    `;
+                }
+            },
+            ],
+            "language": {
+                "emptyTable": "No refresh training data available",
+                "loadingRecords": "Loading...",
+                "processing": "Processing..."
+            }
+        });
+
+        // Expand row on click
+        $('#tblRefresh tbody').on('click', 'td.details-control', function () {
+            var tr  = $(this).closest('tr');
+            var row = table.row(tr);
+            var data = row.data();
+
+            if (row.child.isShown()) {
+                $('div.childWrap', row.child()).slideUp(function () {
+                    tr.removeClass('shown');
+                    row.child.hide();
+                });
+            } else {
+                var participantId = data.participantId;
+                if (!participantId) {
+                    notyf.error('Invalid participant data');
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("GetRefreshDetails", "Result")',
+                    type: 'GET',
+                    data: { participantId: participantId },
+                    success: function (response) {
+                        if (response.data && response.data.length > 0) {
+                            row.child(renderChild(response, notyf), 'no-padding').show();
+                            tr.addClass('shown');
+                            $('div.childWrap', row.child()).slideDown();
+                        } else {
+                            notyf.error('No training details found');
+                        }
+                    },
+                    error: function () {
+                        notyf.error('Failed to load details');
+                    }
+                });
+            }
+        });
+    });
+
+    function renderChild(data, notyf) {
+        var wrapper = $('<div class="p-4 bg-purple-50 rounded-lg mt-4 childWrap"></div>');
+        var rows = [];
+
+        $.each(data.data, function (i, v) {
+            // PreTest cell
+            var preCell = v.preTestScore != null
+                ? `<span class="font-semibold ${v.preTestScore >= 80 ? 'text-green-600' : 'text-red-500'}">${v.preTestScore}</span>`
+                : '<span class="text-gray-400">-</span>';
+
+            // PostTest cell
+            var postCell = v.postTestScore != null
+                ? `<span class="font-semibold ${v.postTestScore >= 80 ? 'text-green-600' : 'text-red-500'}">${v.postTestScore}</span>`
+                : '<span class="text-gray-400">-</span>';
+
+            // Improvement cell
+            var imp = v.improvement;
+            var impCell = imp == null
+                ? '<span class="text-gray-400">-</span>'
+                : imp > 0
+                    ? `<span class="font-semibold text-green-600">&#9650; ${imp}</span>`
+                    : imp < 0
+                        ? `<span class="font-semibold text-red-500">&#9660; ${Math.abs(imp)}</span>`
+                        : `<span class="font-semibold text-gray-500">= 0</span>`;
+
+            // Status badge
+            var statusBadge = (v.postTestScore != null && v.postTestScore >= 80)
+                ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Passed</span>'
+                : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Failed</span>';
+
+            // Delete button: tampil jika postTestFailed DAN quizNumber >= 2
+            var deleteBtn = '';
+            if (v.postTestFailed && v.quizNumber >= 2) {
+                deleteBtn = `
+                    <button class="btn-delete-refresh px-3 py-1.5 rounded-md transition-colors duration-200"
+                        data-participantid="${v.participantId}"
+                        data-trainingid="${v.trainingId}"
+                        data-quiznumber="${v.quizNumber}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>`;
+            }
+
+            rows.push(`
+                <tr class="border-b border-gray-200">
+                    <td class="py-3 px-4 text-sm font-medium text-gray-900">${v.trainingName}</td>
+                    <td class="py-3 px-4 text-sm">${preCell}</td>
+                    <td class="py-3 px-4 text-sm">${postCell}</td>
+                    <td class="py-3 px-4 text-sm">${impCell}</td>
+                    <td class="py-3 px-4">${statusBadge}</td>
+                    <td class="py-3 px-4">${deleteBtn}</td>
+                </tr>
+            `);
+        });
+
+        var childTable = `
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-purple-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-500 uppercase tracking-wider">PreTest</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-green-600 uppercase tracking-wider">PostTest</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Improvement</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${rows.join('')}
+                    </tbody>
+                </table>
+            </div>`;
+
+        wrapper.append(childTable);
+
+        // Delete handler
+        wrapper.find('.btn-delete-refresh').on('click', function () {
+            var participantId = $(this).data('participantid');
+            var trainingId    = $(this).data('trainingid');
+            var quizNumber    = $(this).data('quiznumber');
+            var btn = $(this);
+            var spinnerHtml = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            var trashHtml = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>';
+
+            if (confirm('Are you sure you want to delete this quiz attempt?')) {
+                btn.prop('disabled', true).html(spinnerHtml);
+
+                $.ajax({
+                    url: '/Quiz/DeleteRecord',
+                    type: 'POST',
+                    data: { participantId, trainingId, quizNumber },
+                    success: function (res) {
+                        if (res.success) {
+                            notyf.success(res.message || 'Record deleted successfully!');
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            notyf.error(res.message || 'Failed to delete record.');
+                            btn.prop('disabled', false).html(trashHtml);
+                        }
+                    },
+                    error: function () {
+                        notyf.error('Server error occurred.');
+                        btn.prop('disabled', false).html(trashHtml);
+                    }
+                });
+            }
+        });
+
+        return wrapper;
+    }
+    </script>
+
+    <style>
+        td.details-control {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%237c3aed" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>') no-repeat center center;
+            cursor: pointer;
+            width: 30px;
+            padding: 8px !important;
+        }
+
+        tr.shown td.details-control {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%237c3aed" viewBox="0 0 16 16"><path d="M8.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/></svg>') no-repeat center center;
+        }
+
+        #tblRefresh_wrapper {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        #tblRefresh thead th {
+            background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        #tblRefresh tbody tr:hover {
+            background-color: #f5f3ff;
+        }
+
+        #tblRefresh tbody td {
+            padding: 1rem 1rem;
+            color: #4b5563;
+        }
+
+        .btn-delete-refresh {
+            background-color: #ef4444 !important;
+            background-image: none !important;
+            -webkit-appearance: none !important;
+            border: none !important;
+            color: white !important;
+        }
+
+        .btn-delete-refresh:hover {
+            background-color: #dc2626 !important;
+        }
+    </style>
+}

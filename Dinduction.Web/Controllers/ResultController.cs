@@ -199,17 +199,7 @@ namespace Dinduction.Web.Controllers
         // ============================================
         public async Task<IActionResult> ParticipantResult()
         {
-            try
-            {
-                var entities = await _masterTrainingService.GetAllAsync();
-                var model = _mapper.Map<List<MasterTrainingVM>>(entities);
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-                return View(new List<MasterTrainingVM>());
-            }
+            return View();
         }
 
         // ============================================
@@ -249,90 +239,7 @@ namespace Dinduction.Web.Controllers
             return View();
         }
 
-        // ============================================
-        // CUSTOM SERVER SIDE - TRAINER
-        // ============================================
-        // [HttpPost]
-        // public async Task<JsonResult> CustomServerSide(DataTableAjaxPostModel model)
-        // {
-        //     try
-        //     {
-        //         var userId = GetCurrentUserId();
-        //         var trainerId = await _trainerService.GetTrainerIdAsync(userId);
-                
-        //         var (record, totalResultsCount) = await _recordTrainingService.SearchByTrainerAsync(model, trainerId);
-        //         var sectionId = await _trainerService.GetSectionTrainerIdAsync(userId);
-        //         var totalTrainingCount = await _trainerService.CountTrainingAsync(sectionId);
-
-        //         if (record == null || !record.Any())
-        //         {
-        //             return Json(new
-        //             {
-        //                 draw = model.draw,
-        //                 recordsTotal = 0,
-        //                 recordsFiltered = 0,
-        //                 data = new List<object>()
-        //             });
-        //         }
-
-        //         var filteredResultsCount = record.Count;
-        //         var participantIds = record.Where(c => c.ParticipantId.HasValue)
-        //                                 .Select(c => c.ParticipantId.Value)
-        //                                 .Distinct();
-
-        //         // Get counts for each participant
-        //         var completedTrainingCounts = new Dictionary<int, int>();
-        //         var failedTrainingCounts = new Dictionary<int, int>();
-
-        //         foreach (var participantId in participantIds)
-        //         {
-        //             var completedCount = await _recordTrainingService.CountCompletedAsync(participantId, trainerId);
-        //             var failedCount = await _recordTrainingService.CountFailedAsync(participantId, trainerId);
-                    
-        //             completedTrainingCounts[participantId] = completedCount;
-        //             failedTrainingCounts[participantId] = failedCount;
-        //         }
-
-        //         // Map data with counts
-        //         var data = record.Select(c =>
-        //         {
-        //             var completedCount = c.ParticipantId.HasValue && completedTrainingCounts.ContainsKey(c.ParticipantId.Value)
-        //                 ? completedTrainingCounts[c.ParticipantId.Value]
-        //                 : 0;
-
-        //             var failedCount = c.ParticipantId.HasValue && failedTrainingCounts.ContainsKey(c.ParticipantId.Value)
-        //                 ? failedTrainingCounts[c.ParticipantId.Value]
-        //                 : 0;
-
-        //             // Create mapped model with additional parameters
-        //             var mappedModel = _mapper.Map<ViewRecordMasterVM>(c);
-        //             mappedModel.TotalTrainingCount = totalTrainingCount;
-        //             mappedModel.CompletedTrainingCount = completedCount;
-        //             mappedModel.Failed = failedCount;
-                    
-        //             return mappedModel;
-        //         });
-
-        //         return Json(new
-        //         {
-        //             draw = model.draw,
-        //             recordsTotal = totalResultsCount,
-        //             recordsFiltered = filteredResultsCount,
-        //             data = data
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return Json(new
-        //         {
-        //             draw = model.draw,
-        //             recordsTotal = 0,
-        //             recordsFiltered = 0,
-        //             data = new List<object>(),
-        //             error = ex.Message
-        //         });
-        //     }
-        // }
+    
 
         [HttpPost]
         public async Task<JsonResult> CustomServerSide(DataTableAjaxPostModel model)
@@ -431,20 +338,13 @@ namespace Dinduction.Web.Controllers
                 var filteredResultsCount = record.Count;
                 var participantIds = record.Where(c => c.ParticipantId.HasValue)
                                         .Select(c => c.ParticipantId.Value)
-                                        .Distinct();
+                                        .Distinct()
+                                        .ToList(); 
 
-                var completedTrainingCounts = new Dictionary<int, int>();
-                var failedTrainingCounts = new Dictionary<int, int>();
+                var completedTrainingCounts = await _recordTrainingService.CountCompletedBatchForAdminAsync(participantIds);
+                var failedTrainingCounts = await _recordTrainingService.CountFailedBatchForAdminAsync(participantIds);
 
-                foreach (var participantId in participantIds)
-                {
-                    var completedCount = await _recordTrainingService.CountCompletedForAdminAsync(participantId);
-                    var failedCount = await _recordTrainingService.CountFailedForAdminAsync(participantId);
-                    
-                    completedTrainingCounts[participantId] = completedCount;
-                    failedTrainingCounts[participantId] = failedCount;
-                }
-
+                
                 var data = record.Select(c =>
                 {
                     var completedCount = c.ParticipantId.HasValue && completedTrainingCounts.ContainsKey(c.ParticipantId.Value)
@@ -656,5 +556,97 @@ namespace Dinduction.Web.Controllers
                 return Json(new { error = ex.Message, data = new List<object>() });
             }
         }
+
+    
+
+        public async Task<IActionResult> MyRefreshResult()
+        {
+            var userId = GetCurrentUserId();
+            var trainerId = await _trainerService.GetTrainerIdAsync(userId);
+            ViewBag.TrainerId = trainerId;
+            return View();
+        }
+
+        public async Task<IActionResult> RefreshResult()
+        {
+        
+            return View();
+        }
+
+
+        [HttpPost]
+        public async Task<JsonResult> RefreshServerSide(DataTableAjaxPostModel model)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var trainerId = await _trainerService.GetTrainerIdAsync(userId);
+                var (data, totalCount) = await _recordTrainingService.SearchRefreshByTrainerAsync(model, trainerId);
+                var mapped = _mapper.Map<List<RefreshComparisonVM>>(data);
+
+                return Json(new
+                {
+                    draw = model.draw,
+                    recordsTotal = totalCount,
+                    recordsFiltered = totalCount,
+                    data = mapped
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { draw = model.draw, recordsTotal = 0, 
+                                recordsFiltered = 0, data = new List<object>(), 
+                                error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> RefreshServerSideForAdmin(DataTableAjaxPostModel model)
+        {
+            try
+            {
+                
+                var (data, totalCount) = await _recordTrainingService.SearchRefreshByAdminAsync(model);
+                var mapped = _mapper.Map<List<RefreshComparisonVM>>(data);
+
+                return Json(new
+                {
+                    draw = model.draw,
+                    recordsTotal = totalCount,
+                    recordsFiltered = totalCount,
+                    data = mapped
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new 
+                { 
+                    draw = model.draw, 
+                    recordsTotal = 0, 
+                    recordsFiltered = 0, 
+                    data = new List<object>(), 
+                    error = ex.Message 
+                });
+            }
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetRefreshDetails(int participantId)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var trainerId = await _trainerService.GetTrainerIdAsync(userId);
+                var data = await _recordTrainingService.GetRefreshDetailsByParticipantAsync(participantId, trainerId);
+                var mapped = _mapper.Map<List<RefreshDetailVM>>(data);
+
+                return Json(new { success = true, data = mapped });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
     }
 }

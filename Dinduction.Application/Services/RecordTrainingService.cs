@@ -799,7 +799,7 @@ namespace Dinduction.Infrastructure.Services
         {
             var allRecords = _uow.Repository<VRecordMaster>()
                 .Table()        
-                .Where(c => c.TrainerId == trainerId)
+                .Where(c => c.TrainerId == trainerId && c.TrainingType=="I")
                 .ToList();
 
             var query = allRecords
@@ -815,24 +815,26 @@ namespace Dinduction.Infrastructure.Services
         });
     }
 
-
     public async Task<(List<VRecordMaster> Data, int TotalCount)> SearchForAdminAsync(DataTableAjaxPostModel model)
     {
-        var searchBy = model.search?.value;
+        return await Task.Run(() =>
+        {
+            var allRecords = _uow.Repository<VRecordMaster>()
+                .Table()        
+                .Where(c =>  c.TrainingType=="I")
+                .ToList();
 
-        var query = await Task.Run(() =>
-            _uow.Repository<VRecordMaster>()
-                .Table()
+            var query = allRecords
                 .GroupBy(c => c.ParticipantId)
                 .Select(g => g.OrderByDescending(r => r.RecordDate).FirstOrDefault())
+                .Where(x => x != null)
                 .OrderByDescending(c => c.RecordDate)
                 .ThenBy(c => c.EmployeeName)
-                .ToList()
-        );
+                .ToList();
 
-        var totalCount = query.Count;
-
-        return (query, totalCount);
+            var totalCount = query.Count;
+            return (query, totalCount);
+        });
     }
 
 
@@ -1000,7 +1002,7 @@ namespace Dinduction.Infrastructure.Services
             return result;
         }
 
-       public async Task<bool> IsQuizCompletedAsync(int participantId, int trainingId, int quizNo)
+        public async Task<bool> IsQuizCompletedAsync(int participantId, int trainingId, int quizNo)
         {
             var record = await _uow.Repository<RecordTraining>().GetAsync(
                 x => x.ParticipantId == participantId 
@@ -1010,7 +1012,380 @@ namespace Dinduction.Infrastructure.Services
             
             return record != null; 
         }
+
+
+        public async Task<(List<RefreshComparisonDto> Data, int TotalCount)> SearchRefreshByTrainerAsync(
+    DataTableAjaxPostModel model, int trainerId)
+        {
+            return await Task.Run(() =>
+            {
                 
+                var records = _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(c => c.TrainerId == trainerId && c.TrainingType == "R")
+                    .ToList();
+
+                
+                var nameMap = _uow.Repository<VRecordMaster>()
+                    .Table()
+                    .Where(c => c.TrainerId == trainerId && c.TrainingType == "R")
+                    .Select(c => new  
+                    {
+                        c.ParticipantId,
+                        c.EmployeeName,
+                        c.RecordDate
+                    })
+                    .AsEnumerable()  
+                    .Where(c => c.ParticipantId.HasValue)
+                    .GroupBy(c => c.ParticipantId!.Value)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => new {
+                            EmployeeName = g.FirstOrDefault(r => r.EmployeeName != null)?.EmployeeName ?? "-",
+                            RecordDate   = g.Where(r => r.RecordDate.HasValue)
+                                            .Select(r => r.RecordDate!.Value)
+                                            .DefaultIfEmpty(DateTime.MinValue)
+                                            .Max()
+                        }
+                    );
+
+                
+                var query = records
+                    .GroupBy(r => r.ParticipantId)
+                    .Select(g =>
+                    {
+                        var participantId = g.Key ?? 0;
+                        var trainingIds   = g.Select(r => r.TrainingId).Distinct().ToList();
+
+                        int preTestDone   = 0;
+                        int postTestPassed = 0;
+
+                        foreach (var trainingId in trainingIds)
+                        {
+                            var trainingRecords = g.Where(r => r.TrainingId == trainingId).ToList();
+
+                        
+                            var preRecords = trainingRecords
+                                .Where(r => r.StepType == "PreTest").ToList();
+                            if (preRecords.Any())
+                                preTestDone++;
+
+                        
+                            var postRecords = trainingRecords
+                                .Where(r => r.StepType == "PostTest").ToList();
+                            if (postRecords.Any())
+                            {
+                                var lastQuiz    = postRecords.Max(r => r.QuizNumber);
+                                var lastAttempt = postRecords
+                                    .Where(r => r.QuizNumber == lastQuiz).ToList();
+                                int total   = lastAttempt.Count;
+                                int correct = lastAttempt.Count(r => r.IsTrue == true);
+                                int score   = total > 0
+                                    ? (int)Math.Round((double)correct / total * 100) : 0;
+
+                                if (score >= 80)
+                                    postTestPassed++;
+                            }
+                        }
+
+                        var info = nameMap.ContainsKey(participantId)
+                            ? nameMap[participantId]
+                            : null;
+
+                        return new RefreshComparisonDto
+                        {
+                            ParticipantId  = participantId,
+                            EmployeeName   = info?.EmployeeName ?? "-",
+                            RecordDate     = info?.RecordDate   ?? DateTime.MinValue,
+                            TotalTraining  = trainingIds.Count,
+                            PreTestDone    = preTestDone,
+                            PostTestPassed = postTestPassed
+                        };
+                    })
+                    .OrderByDescending(c => c.RecordDate)
+                    .ThenBy(c => c.EmployeeName)
+                    .ToList();
+
+                return (query, query.Count);
+            });
+        }
+
+        public async Task<(List<RefreshComparisonDto> Data, int TotalCount)> SearchRefreshByAdminAsync(DataTableAjaxPostModel model)
+        {
+            return await Task.Run(() =>
+            {
+                
+                var records = _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(c => c.TrainingType == "R")
+                    .ToList();
+
+                
+                var nameMap = _uow.Repository<VRecordMaster>()
+                    .Table()
+                    .Where(c => c.TrainingType == "R")
+                    .Select(c => new  
+                    {
+                        c.ParticipantId,
+                        c.EmployeeName,
+                        c.RecordDate
+                    })
+                    .AsEnumerable()  
+                    .Where(c => c.ParticipantId.HasValue)
+                    .GroupBy(c => c.ParticipantId!.Value)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => new {
+                            EmployeeName = g.FirstOrDefault(r => r.EmployeeName != null)?.EmployeeName ?? "-",
+                            RecordDate   = g.Where(r => r.RecordDate.HasValue)
+                                            .Select(r => r.RecordDate!.Value)
+                                            .DefaultIfEmpty(DateTime.MinValue)
+                                            .Max()
+                        }
+                    );
+
+                
+                var query = records
+                    .GroupBy(r => r.ParticipantId)
+                    .Select(g =>
+                    {
+                        var participantId = g.Key ?? 0;
+                        var trainingIds   = g.Select(r => r.TrainingId).Distinct().ToList();
+
+                        int preTestDone   = 0;
+                        int postTestPassed = 0;
+
+                        foreach (var trainingId in trainingIds)
+                        {
+                            var trainingRecords = g.Where(r => r.TrainingId == trainingId).ToList();
+
+                        
+                            var preRecords = trainingRecords
+                                .Where(r => r.StepType == "PreTest").ToList();
+                            if (preRecords.Any())
+                                preTestDone++;
+
+                        
+                            var postRecords = trainingRecords
+                                .Where(r => r.StepType == "PostTest").ToList();
+                            if (postRecords.Any())
+                            {
+                                var lastQuiz    = postRecords.Max(r => r.QuizNumber);
+                                var lastAttempt = postRecords
+                                    .Where(r => r.QuizNumber == lastQuiz).ToList();
+                                int total   = lastAttempt.Count;
+                                int correct = lastAttempt.Count(r => r.IsTrue == true);
+                                int score   = total > 0
+                                    ? (int)Math.Round((double)correct / total * 100) : 0;
+
+                                if (score >= 80)
+                                    postTestPassed++;
+                            }
+                        }
+
+                        var info = nameMap.ContainsKey(participantId)
+                            ? nameMap[participantId]
+                            : null;
+
+                        return new RefreshComparisonDto
+                        {
+                            ParticipantId  = participantId,
+                            EmployeeName   = info?.EmployeeName ?? "-",
+                            RecordDate     = info?.RecordDate   ?? DateTime.MinValue,
+                            TotalTraining  = trainingIds.Count,
+                            PreTestDone    = preTestDone,
+                            PostTestPassed = postTestPassed
+                        };
+                    })
+                    .OrderByDescending(c => c.RecordDate)
+                    .ThenBy(c => c.EmployeeName)
+                    .ToList();
+
+                return (query, query.Count);
+            });
+        }
+
+        public async Task<List<RefreshDetailDto>> GetRefreshDetailsByParticipantAsync(int participantId, int trainerId)
+        {
+            return await Task.Run(() =>
+            {
+                var records = _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(c => c.ParticipantId == participantId
+                            && c.TrainerId == trainerId
+                            && c.TrainingType == "R")
+                    .ToList();
+
+                var result = records
+                    .GroupBy(c => new { c.TrainingId, c.StepType })
+                    .ToList();
+
+                // Ambil semua TrainingId yang ada
+                var trainingIds = records.Select(r => r.TrainingId).Distinct().ToList();
+
+                // Ambil training names
+                var trainingNames = _uow.Repository<MasterTraining>()
+                    .Table()
+                    .Where(t => trainingIds.Contains(t.Id))
+                    .ToDictionary(t => t.Id, t => t.TrainingName);
+
+                var output = trainingIds.Select(trainingId =>
+                {
+                    var trainingRecords = records.Where(r => r.TrainingId == trainingId).ToList();
+
+                    // PreTest: QuizNumber=1
+                    var preRecords = trainingRecords.Where(r => r.StepType == "PreTest").ToList();
+                    int? preScore = null;
+                    if (preRecords.Any())
+                    {
+                        var lastPreQuiz = preRecords.Max(r => r.QuizNumber);
+                        var preAttempt = preRecords.Where(r => r.QuizNumber == lastPreQuiz).ToList();
+                        int totalPre = preAttempt.Count;
+                        int correctPre = preAttempt.Count(r => r.IsTrue == true);
+                        preScore = totalPre > 0 ? (int)Math.Round((double)correctPre / totalPre * 100) : 0;
+                    }
+
+                    // PostTest: QuizNumber=2
+                    var postRecords = trainingRecords.Where(r => r.StepType == "PostTest").ToList();
+                    int? postScore = null;
+                    if (postRecords.Any())
+                    {
+                        var lastPostQuiz = postRecords.Max(r => r.QuizNumber);
+                        var postAttempt = postRecords.Where(r => r.QuizNumber == lastPostQuiz).ToList();
+                        int totalPost = postAttempt.Count;
+                        int correctPost = postAttempt.Count(r => r.IsTrue == true);
+                        postScore = totalPost > 0 ? (int)Math.Round((double)correctPost / totalPost * 100) : 0;
+                    }
+
+                    var lastQuizNumber = trainingRecords.Max(r => r.QuizNumber);
+
+                    return new RefreshDetailDto
+                    {
+                        ParticipantId = participantId,
+                        TrainingId    = trainingId.Value,
+                        TrainingName  = trainingNames.ContainsKey(trainingId.Value) 
+                                        ? trainingNames[trainingId.Value] : "-",
+                        PreTestScore  = preScore,
+                        PostTestScore = postScore,
+                        QuizNumber    = lastQuizNumber.GetValueOrDefault()
+                    };
+                })
+                .OrderBy(r => r.TrainingName)
+                .ToList();
+
+                return output;
+            });
+        }
+
+        public async Task<List<object>> GetTrainingsByDateByTrainerAsync(DateTime? date, int trainerId, string trainingType)
+        {
+            return await Task.Run(() =>
+            {
+                if (!date.HasValue) return new List<object>();
+
+                var records = _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(r => r.TrainerId == trainerId
+                            && r.TrainingType == trainingType
+                            && r.RecordDate.Value.Date == date.Value.Date)
+                    .Select(r => r.TrainingId)
+                    .Distinct()
+                    .ToList();
+
+                var trainings = _uow.Repository<MasterTraining>()
+                    .Table()
+                    .Where(t => records.Contains(t.Id))
+                    .Select(t => new { value = t.Id, text = t.TrainingName })
+                    .ToList<object>();
+
+                return trainings;
+            });
+        }
+
+            public async Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId)
+            {
+                return await Task.Run(() =>
+                    _uow.Repository<RecordTraining>()
+                        .Table()
+                        .Where(r => r.TrainerId == trainerId
+                                && r.TrainingType == "I"
+                                && (r.StepType == null || r.StepType == "Normal"))
+                        .ToList()
+                        .Select(r => r.RecordDate.Value.Date)
+                        .Distinct()
+                        .ToList()
+                );
+            }        
+                
+
+                public async Task<Dictionary<int, int>> CountCompletedBatchForAdminAsync(List<int> participantIds)
+        {
+            var allData = await Task.FromResult(
+                _uow.Repository<VRecordMaster>()
+                    .Table()
+                    .Where(c => participantIds.Contains(c.ParticipantId.Value)) 
+                    .ToList()
+            );
+
+            var result = new Dictionary<int, int>();
+
+            foreach (var participantId in participantIds)
+            {
+                var participantData = allData
+                    .Where(c => c.ParticipantId == participantId)
+                    .GroupBy(c => c.TrainingName)
+                    .Select(g => g.OrderByDescending(r => r.Id).FirstOrDefault())
+                    .ToList();
+
+                result[participantId] = participantData.Count;
+            }
+
+            return result;
+        }
+
+        
+        public async Task<Dictionary<int, int>> CountFailedBatchForAdminAsync(List<int> participantIds)
+        {
+            var allData = await Task.FromResult(
+                _uow.Repository<VRecordMaster>()
+                    .Table()
+                    .Where(c => participantIds.Contains(c.ParticipantId.Value)) 
+                    .OrderBy(c => c.TrainingId)
+                    .ThenBy(c => c.QuizNumber)
+                    .ToList()
+            );
+
+            var result = new Dictionary<int, int>();
+
+            foreach (var participantId in participantIds)
+            {
+                var participantData = allData.Where(c => c.ParticipantId == participantId).ToList();
+                var groups = participantData.GroupBy(c => c.TrainingId);
+                int failedCount = 0;
+
+                foreach (var group in groups)
+                {
+                    var lastQuizNumber = group.Max(x => x.QuizNumber);
+                    var lastAttemptQuestions = group.Where(c => c.QuizNumber == lastQuizNumber).ToList();
+
+                    if (!lastAttemptQuestions.Any()) continue;
+
+                    int totalSoal = lastAttemptQuestions.Count;
+                    int totalBenar = lastAttemptQuestions.Count(c => c.IsTrue == true);
+                    double score = (totalSoal > 0) ? ((double)totalBenar / totalSoal) * 100 : 0;
+
+                    if (score < 80)
+                    {
+                        failedCount++;
+                    }
+                }
+
+                result[participantId] = failedCount;
+            }
+
+            return result;
+        }       
+
 
     }
 }

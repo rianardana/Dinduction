@@ -159,20 +159,20 @@
         background: #0b111e;
     }
 
-    .page-wrapper {
-        display: flex;
-        justify-content: center;
-        padding: 8px;
-    }
+   .page-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0;
+    width: 100%;
+    overflow: hidden;
+}
 
-    .page-wrapper canvas {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 6px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        background: white;
-    }
+.page-wrapper canvas {
+    display: block;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    background: white;
+}
 
     .page-placeholder {
         width: 100%;
@@ -397,9 +397,9 @@
         let pdfDoc = null, pageCount = 0, currentPage = 1, renderQueue = {};
         let quizShown = false;
 
-        function getScale() {
+            function getScale() {
             const dpr = window.devicePixelRatio || 1;
-            const containerW = pdfScroll.clientWidth - 16;
+            const containerW = pdfScroll.clientWidth - 32; 
             return (containerW / 595) * dpr;
         }
 
@@ -411,14 +411,24 @@
             if (!wrapper) return;
 
             const page = await pdfDoc.getPage(num);
-            const scale = getScale();
+            
+            // Ambil viewport asli dulu untuk tahu aspect ratio PDF
+            const vpNatural = page.getViewport({ scale: 1 });
+            
+            // Hitung scale berdasarkan lebar container yang tersedia
+            const containerW = pdfScroll.clientWidth;
+            const dpr = window.devicePixelRatio || 1;
+            const scale = (containerW / vpNatural.width) * dpr;
+            
             const vp = page.getViewport({ scale });
 
             const canvas = document.createElement('canvas');
             canvas.width  = vp.width;
             canvas.height = vp.height;
-            canvas.style.width  = '100%';
+            // CSS: tampilkan full width, height auto (aspect ratio terjaga)
+            canvas.style.width  = containerW + 'px';
             canvas.style.height = 'auto';
+            canvas.style.display = 'block';
 
             wrapper.innerHTML = '';
             wrapper.appendChild(canvas);

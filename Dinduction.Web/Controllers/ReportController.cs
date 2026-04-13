@@ -314,41 +314,45 @@ namespace Dinduction.Web.Controllers
         // ============================================
 
         public async Task<IActionResult> GetPresenceDataByTrainer(string date, int? trainingId)
+{
+    if (trainingId == null || trainingId == 0)
+        return Ok(new List<object>());
+
+    if (!DateTime.TryParse(date, out var selectedDate))
+        return Ok(new List<object>());
+
+    try
+    {
+        var userId = GetCurrentUserId();
+        if (userId == 0) return Ok(new List<object>());
+
+        var trainerId = await _trainerService.GetTrainerIdAsync(userId);
+        
+       
+        var (participants, trainingTypes) = await _participantService
+            .GetPresenceByTrainerWithTrainingTypeAsync(selectedDate, trainingId.Value, trainerId);
+        
+      
+        var mappedData = _mapper.Map<List<ParticipantUserVM>>(participants);
+        
+       
+        foreach (var vm in mappedData)
         {
-            if (trainingId == null || trainingId == 0)
-                return Ok(new List<object>());
-
-            if (!DateTime.TryParse(date, out var selectedDate))
-                return Ok(new List<object>());
-
-            try
+            if (trainingTypes.TryGetValue(vm.Id, out var type))
             {
-                var userId = GetCurrentUserId();
-                Console.WriteLine($"🔍 GetPresenceDataByTrainer - UserId: {userId}");
-                
-                if (userId == 0)
-                {
-                    Console.WriteLine("⚠️ UserId is 0");
-                    return Ok(new List<object>());
-                }
-
-                var trainerId = await _trainerService.GetTrainerIdAsync(userId);
-                Console.WriteLine($"🔍 TrainerId: {trainerId}, Date: {selectedDate:yyyy-MM-dd}, TrainingId: {trainingId}");
-
-                var data = await _participantService.GetPresenceByTrainerAsync(selectedDate, trainingId.Value, trainerId);
-                var mappedData = _mapper.Map<List<ParticipantUserVM>>(data);
-
-                Console.WriteLine($"✅ Returning {mappedData.Count} attendance records");
-
-                return Ok(mappedData);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error in GetPresenceDataByTrainer: {ex.Message}");
-                Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
-                return Ok(new List<object>());
+                vm.TrainingType = "Refreshment"; 
+            
             }
         }
+
+        return Ok(mappedData);
+    }
+    catch (Exception ex)
+    {
+        
+        return Ok(new List<object>());
+    }
+}
 
         // ============================================
         // AJAX - GET TRAINING DATES - ADMIN
@@ -382,12 +386,12 @@ namespace Dinduction.Web.Controllers
                 var listDate = await _participantService.GetTrainingDatesByTrainerAsync(trainerId);
                 var dates = listDate.Select(d => d.ToString("yyyy-MM-dd")).ToList();
 
-                return Ok(dates); // ✅ Pakai Ok() biar bisa GET request
+                return Ok(dates); 
             }
             catch (Exception ex)
             {
                 
-                return Ok(new List<string>()); // ✅ Return empty list
+                return Ok(new List<string>());
             }
         }
 
@@ -461,5 +465,79 @@ namespace Dinduction.Web.Controllers
                 return Ok(new List<object>());
             }
         }
+
+        public async Task<IActionResult> RefreshReport()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetRefreshPresenceData(DateTime? date, int? trainingId)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var trainerId = await _trainerService.GetTrainerIdAsync(userId);
+
+                if (!date.HasValue || !trainingId.HasValue || trainingId == 0)
+                    return Json(new List<object>());
+
+                var data = await _participantService.GetRefreshPresenceByTrainerAsync(
+                    date.Value, trainingId.Value, trainerId);
+
+                var mapped = _mapper.Map<List<RefreshAttendanceVM>>(data);
+                return Json(mapped);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<object>());
+            }
+        }
+
+        
+        [HttpGet]
+        public async Task<JsonResult> GetRefreshTrainingsByDate(DateTime? date)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var trainerId = await _trainerService.GetTrainerIdAsync(userId);
+
+                var trainings = await _recordTrainingService
+                    .GetTrainingsByDateByTrainerAsync(date, trainerId, "R"); 
+
+                return Json(trainings);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<object>());
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRefreshTrainingDates()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var trainerId = await _trainerService.GetTrainerIdAsync(userId);
+
+                var dates = await _participantService
+                    .GetTrainingDatesByTrainerAndTypeAsync(trainerId, "R");
+
+                var formatted = dates
+                    .Select(d => d.ToString("yyyy-MM-dd"))
+                    .Distinct()
+                    .ToList();
+
+                return Ok(formatted);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new List<string>());
+            }
+        }
+
+
     }
 }

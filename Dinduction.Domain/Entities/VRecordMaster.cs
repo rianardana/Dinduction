@@ -24,6 +24,8 @@ public partial class VRecordMaster
     public int? QuizNumber { get; set; }
 
     public int Score { get; set; }
+    public string? TrainingType { get; set; }
+    public string? StepType { get; set; }
 
     public int? TrainerId { get; set; }
 }
