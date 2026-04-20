@@ -7,6 +7,7 @@ using AutoMapper;
 using Dinduction.Application.Models;
 using Dinduction.Web.Models;
 using Dinduction.Application.Interfaces;
+using ClosedXML.Excel; 
 
 namespace Dinduction.Web.Controllers
 {
@@ -395,6 +396,37 @@ namespace Dinduction.Web.Controllers
             }
         }
 
+        // public async Task<JsonResult> GetTrainingsByDate(string date)
+        // {
+        //     if (!DateTime.TryParse(date, out var targetDate))
+        //         return Json(new List<object>());
+
+        //     try
+        //     {
+            
+        //         var participants = await _participantService.GetPresenceAsync(targetDate, 0);
+                
+            
+        //         var trainings = participants
+        //             .Where(p => p.Training != null)
+        //             .Select(p => new
+        //             {
+        //                 Value = p.TrainingId,
+        //                 Text = p.Training.TrainingName ?? "Unknown"
+        //             })
+        //             .DistinctBy(t => t.Value) 
+        //             .ToList();
+
+        //         return Json(trainings);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine($"Error in GetTrainingsByDate: {ex.Message}");
+        //         return Json(new List<object>());
+        //     }
+        // }
+
+    
         public async Task<JsonResult> GetTrainingsByDate(string date)
         {
             if (!DateTime.TryParse(date, out var targetDate))
@@ -402,25 +434,22 @@ namespace Dinduction.Web.Controllers
 
             try
             {
-            
-                var participants = await _participantService.GetPresenceAsync(targetDate, 0);
+                // ✅ GANTI: Pakai method baru untuk scheduled trainings
+                var trainings = await _participantService.GetScheduledTrainingsByDateAsync(targetDate);
                 
-            
-                var trainings = participants
-                    .Where(p => p.Training != null)
-                    .Select(p => new
+                var result = trainings
+                    .Select(t => new
                     {
-                        Value = p.TrainingId,
-                        Text = p.Training.TrainingName ?? "Unknown"
+                        value = t.Id,
+                        text = t.TrainingName ?? "Unknown"
                     })
-                    .DistinctBy(t => t.Value) 
                     .ToList();
 
-                return Json(trainings);
+                return Json(result);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetTrainingsByDate: {ex.Message}");
+                Console.WriteLine($"[ERROR] GetTrainingsByDate: {ex.Message}");
                 return Json(new List<object>());
             }
         }
@@ -535,6 +564,83 @@ namespace Dinduction.Web.Controllers
             catch (Exception ex)
             {
                 return Ok(new List<string>());
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadTrainingForm(DateTime date, int trainingId)
+        {
+            try
+            {
+            
+                var data = await _participantService.GetPresenceAsync(date, trainingId);
+                var participants = _mapper.Map<List<ParticipantUserVM>>(data);
+
+                // ✅ 2. Generate Excel dengan ClosedXML
+                using (var workbook = new ClosedXML.Excel.XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Attendance");
+                    
+                    // Header
+                    var headers = new[] { "No Badge", "Employee Name", "Training Date", "Department", "Training Type" };
+                    for (int col = 0; col < headers.Length; col++)
+                    {
+                        worksheet.Cell(1, col + 1).Value = headers[col];
+                    }
+                    
+                    // Styling header
+                    var headerRange = worksheet.Range(1, 1, 1, headers.Length);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#3b82f6");
+                    headerRange.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+                    
+                    // Data rows
+                    int row = 2;
+                    foreach (var p in participants)
+                    {
+                    
+                        worksheet.Cell(row, 1).Value = p.UserName ?? "-";
+                        worksheet.Cell(row, 2).Value = p.EmployeeName ?? "-";
+                        worksheet.Cell(row, 3).Value = p.TrainingDate.ToString("dd-MMM-yyyy") ?? "-";
+                        worksheet.Cell(row, 4).Value = p.Department ?? "-";
+                        
+                    
+                        var typeCode = p.TrainingType ?? "I"; 
+                        worksheet.Cell(row, 5).Value = typeCode switch
+                        {
+                            "I" => "Induction",
+                            "R" => "Refresh",
+                            _ => typeCode
+                        };
+                        
+                        row++;
+                    }
+                    
+                
+                    worksheet.Columns().AdjustToContents();
+                    
+                    // Return file
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        return File(
+                            stream.ToArray(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            $"Attendance_{date:yyyyMMdd}_Training{trainingId}.xlsx"
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // ✅ FIX: Ganti _logger dengan Console.WriteLine (karena nggak ada ILogger)
+                Console.WriteLine($"[ERROR] Failed to export Excel: {ex.Message}");
+                Console.WriteLine($"[ERROR] StackTrace: {ex.StackTrace}");
+                
+                // Optional: tambah ke ModelState kalau mau error muncul di UI
+                // ModelState.AddModelError("", "Failed to generate Excel file");
+                
+                return BadRequest("Failed to generate Excel file");
             }
         }
 

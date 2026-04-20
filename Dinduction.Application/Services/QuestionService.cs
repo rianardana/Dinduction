@@ -140,16 +140,26 @@ public class QuestionService : IQuestionService
         return (last ?? 0) + 1;
     }
 
+    // public async Task<List<VQuestionAnswerUser>> GetListAnswerAsync(int trainingId, int participantId)
+    // {
+    //     return await Task.FromResult(
+    //         _uow.Repository<VQuestionAnswerUser>()
+    //             .Table()
+    //             .Where(c => c.TrainingId == trainingId && c.ParticipantId == participantId)
+    //             .GroupBy(c => c.QuestionTraining)
+    //             .Select(g => g.OrderByDescending(c => c.QuizNumber).FirstOrDefault())
+    //             .OrderBy(c => c.Number)
+    //             .ToList()
+    //     );
+    // }
+
     public async Task<List<VQuestionAnswerUser>> GetListAnswerAsync(int trainingId, int participantId)
     {
         return await Task.FromResult(
             _uow.Repository<VQuestionAnswerUser>()
                 .Table()
                 .Where(c => c.TrainingId == trainingId && c.ParticipantId == participantId)
-                .GroupBy(c => c.QuestionTraining)
-                .Select(g => g.OrderByDescending(c => c.QuizNumber).FirstOrDefault())
-                .OrderBy(c => c.Number)
-                .ToList()
+                .ToList() 
         );
     }
 
@@ -186,14 +196,25 @@ public class QuestionService : IQuestionService
         );
     }
 
-    public async Task<VMasterQuestion?> GetDetailAsync(int trainingId, int participantId)
+    // public async Task<VMasterQuestion?> GetDetailAsync(int trainingId, int participantId)
+    // {
+    //     return await Task.FromResult(
+    //         _uow.Repository<VMasterQuestion>()
+    //             .Table()
+    //             .Where(c => c.TrainingId == trainingId && c.ParticipantId == participantId)
+    //             .FirstOrDefault()
+    //     );
+    // }
+
+    public async Task<VQuestionAnswerUser> GetDetailAsync(int trainingId, int participantId)
     {
-        return await Task.FromResult(
-            _uow.Repository<VMasterQuestion>()
+        var rawData = await Task.FromResult(
+            _uow.Repository<VQuestionAnswerUser>()
                 .Table()
                 .Where(c => c.TrainingId == trainingId && c.ParticipantId == participantId)
-                .FirstOrDefault()
+                .ToList()
         );
+        return rawData.FirstOrDefault();
     }
 
     public async Task<int> GetTotalQuestionAsync(int trainingId)

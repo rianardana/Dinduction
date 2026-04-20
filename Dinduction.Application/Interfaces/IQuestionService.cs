@@ -16,7 +16,7 @@ public interface IQuestionService
     Task<VQuestionAnswer?> GetQuestionByNumberAsync(int trainingId, int number);
     Task<List<VQuestionAnswerUser>> GetListAnswerAsync(int trainingId, int participantId);
     Task<List<VQuestionAnswerUser>> GetListAnswerHistoryAsync(int trainingId, int participantId, int quizNumber);
-    Task<VMasterQuestion?> GetDetailAsync(int trainingId, int participantId);
+    Task<VQuestionAnswerUser> GetDetailAsync(int trainingId, int participantId);
     Task<int> GetTrainingIdAsync(int id);
     Task<int> GetNumberAsync(int id);
     Task<int> GetLastNumberAsync();

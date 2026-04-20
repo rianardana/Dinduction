@@ -23,6 +23,6 @@ public interface IParticipantService
     Task<(List<ParticipantUser> participants, Dictionary<int, string> trainingTypes)> GetPresenceByTrainerWithTrainingTypeAsync(DateTime date, int trainingId, int trainerId);
     Task<List<RefreshAttendanceDto>> GetRefreshPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId);
     Task<List<DateTime>> GetTrainingDatesByTrainerAndTypeAsync(int trainerId, string trainingType);
-    
+    Task<List<MasterTraining>> GetScheduledTrainingsByDateAsync(DateTime date);
     
 }

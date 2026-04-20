@@ -70,5 +70,6 @@ namespace Dinduction.Application.Interfaces
         Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId);
         Task<Dictionary<int, int>> CountFailedBatchForAdminAsync(List<int> participantIds);
         Task<Dictionary<int, int>> CountCompletedBatchForAdminAsync(List<int> participantIds);
+        
     }
 }

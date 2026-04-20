@@ -42,6 +42,8 @@ builder.Services.AddScoped<IRecordTrainingService, RecordTrainingService>();
 builder.Services.AddScoped<ILearningMaterialService, LearningMaterialService>();
 builder.Services.AddScoped<IUserLearningProgressService, UserLearningProgressService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddSingleton<Dinduction.Web.Services.Pdf.Interfaces.IPdfGeneratorService, 
+                            Dinduction.Web.Services.Pdf.Implementations.QuestPdfGeneratorService>();
 
 var app = builder.Build();
 

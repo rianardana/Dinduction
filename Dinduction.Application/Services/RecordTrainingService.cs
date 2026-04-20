@@ -277,15 +277,18 @@ namespace Dinduction.Infrastructure.Services
             );
         }
 
-        public async Task<VRecordResult> GetResultAsync(int trainingId, int participantId)
+       public async Task<VRecordResult> GetResultAsync(int trainingId, int participantId)
         {
-            return await Task.FromResult(
+            
+            var rawData = await Task.FromResult(
                 _uow.Repository<VRecordResult>()
                     .Table()
                     .Where(c => c.TrainingId == trainingId && c.ParticipantId == participantId)
-                    .OrderByDescending(c => c.QuizNumber)
-                    .FirstOrDefault()
+                    .ToList() 
             );
+
+            
+            return rawData.OrderByDescending(c => c.QuizNumber).FirstOrDefault();
         }
 
         public async Task<VRecordResult> GetResultHistoryAsync(int trainingId, int participantId, int quizNumber)
@@ -1386,6 +1389,7 @@ namespace Dinduction.Infrastructure.Services
             return result;
         }       
 
+        
 
     }
 }
