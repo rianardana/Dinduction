@@ -10,11 +10,13 @@ namespace Dinduction.Web.Controllers;
 public class AccountController : Controller
 {
     private readonly IUserService _userService;
+    private readonly IPasswordService _passwordService;
     private readonly IMapper _mapper;
 
-    public AccountController(IUserService userService, IMapper mapper)
+    public AccountController(IUserService userService, IPasswordService passwordService, IMapper mapper)
     {
         _userService = userService;
+        _passwordService = passwordService;
         _mapper = mapper;
     }
 
@@ -55,7 +57,8 @@ public class AccountController : Controller
                 return View(model);
             }
 
-            if (user.Password != model.Password)
+            // ✅ UPDATE: Verify hashed password pakai IPasswordService
+            if (!_passwordService.VerifyPassword(model.Password, user.Password))
             {
                 ModelState.AddModelError("", "Password Is Incorrect!");
                 return View(model);
@@ -65,6 +68,9 @@ public class AccountController : Controller
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("EmployeeName", user.EmployeeName ?? "");
             HttpContext.Session.SetString("Role", user.RoleId?.ToString() ?? "2");
+            
+            // ✅ Simpan TrainingType di Session (penting untuk redirect Induction/Refresh)
+            HttpContext.Session.SetString("TrainingType", user.TrainingType ?? "I");
 
             await _userService.UpdateAsync(user); 
 

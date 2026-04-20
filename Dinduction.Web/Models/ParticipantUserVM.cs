@@ -43,6 +43,7 @@ public class ParticipantUserVM
     public DateTime TrainingDate { get; set; }
     
     public int SectionTrainerId { get; set; }
+    public string? TrainingType { get; set; }
 
     public List<SelectListItem> ListParticipant { get; set; }
     public SelectList? ListTraining { get; set; }

@@ -20,10 +20,12 @@ public partial class User
     public DateOnly? EndTraining { get; set; }
 
     public string? Department { get; set; }
+    public string? TrainingType { get; set; } 
 
     public virtual ICollection<ParticipantUser> ParticipantUsers { get; set; } = new List<ParticipantUser>();
 
     public virtual Role? Role { get; set; }
 
     public virtual ICollection<Trainer> Trainers { get; set; } = new List<Trainer>();
+    public virtual ICollection<UserLearningProgress> UserLearningProgresses { get; set; } = new List<UserLearningProgress>();
 }

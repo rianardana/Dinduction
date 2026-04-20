@@ -1,17 +1,74 @@
 @model Dinduction.Web.Models.MasterTrainingVM
 @using Dinduction.Domain.Entities
 @{
-    var status = TempData["QuizStatus"] as string ?? "Start";
+    var status = ViewBag.QuizStatus as string ?? TempData["QuizStatus"] as string ?? QuizStatus.Start.ToString();
     var questionCount = Convert.ToInt32(TempData["QuestionCount"] ?? 0);
     var participantId = Convert.ToInt32(TempData["ParticipantId"] ?? 0);
     var pointPerQuestion = questionCount == 5 ? 20 : 10;
+    var trainingType = ViewBag.TrainingType as string ?? "I";
+    var quizNo = Model.QuizNo;
+    var backUrl = (ViewBag.TrainingType as string == "R") 
+        ? Url.Action("Index", "Quiz") 
+        : Url.Action("Index", "Learning");
 }
 
 <div class="mobile-container">
+    <!-- ✅ BADGE QUIZ TYPE (Dynamic Color) -->
+    <div class="mb-6">
+        @if (ViewBag.QuizType == "PreTest")
+        {
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 border border-amber-300 rounded-full">
+                <span class="text-xl">🎯</span>
+                <span class="font-semibold text-amber-800">Pre-Test</span>
+            </div>
+        }
+        else if (ViewBag.QuizType == "PostTest")
+        {
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 border border-purple-300 rounded-full">
+                <span class="text-xl">📋</span>
+                <span class="font-semibold text-purple-800">Post-Test</span>
+            </div>
+        }
+        else if (ViewBag.QuizType == "Blocked")
+        {
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-full">
+                <span class="text-xl">⛔</span>
+                <span class="font-semibold text-gray-800">Blocked</span>
+            </div>
+        }
+        else
+        {
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 border border-blue-300 rounded-full">
+                <span class="text-xl">📝</span>
+                <span class="font-semibold text-blue-800">Quiz</span>
+            </div>
+        }
+    </div>
+
+    <!-- ✅ INFO BOX -->
+    @if (TempData["Recovered"] != null)
+{
+    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700">
+        ℹ️ @TempData["Recovered"]
+    </div>
+}
+    <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <h4 class="font-semibold text-gray-800 mb-1">@ViewBag.QuizTitle</h4>
+        <p class="text-sm text-gray-600">@ViewBag.QuizNote</p>
+    </div>
+
+    <!-- ✅ ERROR MESSAGE (untuk validasi Post-Test) -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            ⚠️ @TempData["Error"]
+        </div>
+    }
+
     @using (Html.BeginForm("Training", "User", FormMethod.Post, new { id = "trainingForm" }))
     {
         @Html.AntiForgeryToken()
-        
+
         <!-- Header Section -->
         <div class="header-card">
             <h1 class="title">@Model.TrainingName</h1>
@@ -23,7 +80,7 @@
             </div>
         </div>
 
-        <!-- Objectives Section - Compact -->
+        <!-- Objectives Section -->
         <div class="section-card">
             <h2 class="section-title">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -44,7 +101,7 @@
             </ol>
         </div>
 
-        <!-- Scoring System - Compact & Visual -->
+        <!-- Scoring System -->
         <div class="section-card scoring-card">
             <h2 class="section-title">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -53,9 +110,7 @@
                 </svg>
                 Sistem Penilaian / Scoring System
             </h2>
-            
             <div class="scoring-grid">
-                <!-- Point System -->
                 <div class="score-item">
                     <div class="score-label">Per Soal Benar</div>
                     <div class="score-value success">@pointPerQuestion pts</div>
@@ -65,10 +120,7 @@
                     <div class="score-value error">0 pts</div>
                 </div>
             </div>
-
             <div class="divider"></div>
-
-            <!-- Grade System -->
             <div class="grade-system">
                 <div class="grade-row">
                     <span class="grade-range">0-60</span>
@@ -83,10 +135,7 @@
                     <span class="grade-badge good">Memuaskan</span>
                 </div>
             </div>
-
             <div class="divider"></div>
-
-            <!-- Pass/Fail -->
             <div class="pass-fail">
                 <div class="pf-item fail">
                     <span class="pf-icon">✕</span>
@@ -99,7 +148,7 @@
             </div>
         </div>
 
-        <!-- Employee Info - Compact -->
+        <!-- Employee Info -->
         <div class="section-card employee-card">
             <h2 class="section-title">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -123,14 +172,21 @@
             </div>
         </div>
 
-       <!-- Action Buttons -->
+        <!-- Action Buttons -->
         <div class="action-section">
-            <a href="@Url.Action("Index", "Quiz")" class="btn btn-secondary">
+            <a href="@backUrl" class="btn btn-secondary">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                     <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
                 </svg>
-                Back to Menu
-            </a>
+                 @if (ViewBag.TrainingType as string == "R")
+                    {
+                        <text>Back to Quiz Menu</text>
+                    }
+                    else
+                    {
+                        <text>Back to Learning</text>
+                    }
+                 </a>
 
             @switch ((QuizStatus)Enum.Parse(typeof(QuizStatus), status))
             {
@@ -143,6 +199,19 @@
                         <span>Silakan hubungi trainer untuk mengambil kuis</span>
                     </div>
                     break;
+
+                case QuizStatus.Start when (trainingType == "R" && quizNo == 1 && ViewBag.PreTestRecovered == true):
+                <div class="alert-box success">
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                    </svg>
+                    <span>Pre-Test sudah selesai! Lanjutkan ke materi pembelajaran.</span>
+                </div>
+                <a href="@Url.Action("Study", "Learning", new { trainingId = Model.Id })" class="btn btn-primary">
+                    📚 Lanjut ke Materi
+                </a>
+                break;
+
                 case QuizStatus.Start:
                     <a href="@Url.Action("Test", "Quiz", new { trainingId = Model.Id, Number = 1, QuizNo = Model.QuizNo })" class="btn btn-primary">
                         Mulai Quiz
@@ -151,6 +220,7 @@
                         </svg>
                     </a>
                     break;
+
                 case QuizStatus.Continue:
                     <a href="@Url.Action("Continue", "Quiz", new { trainingId = Model.Id, QuizNo = Model.QuizNo })" class="btn btn-primary">
                         Lanjutkan Quiz
@@ -159,6 +229,7 @@
                         </svg>
                     </a>
                     break;
+
                 case QuizStatus.Second:
                     <a href="@Url.Action("Test", "Quiz", new { trainingId = Model.Id, Number = 1, QuizNo = Model.QuizNo + 1 })" class="btn btn-primary">
                         Quiz Kedua
@@ -167,6 +238,7 @@
                         </svg>
                     </a>
                     break;
+
                 case QuizStatus.Done:
                     <div class="alert-box success">
                         <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
@@ -175,6 +247,7 @@
                         <span>Quiz telah selesai. Terima kasih!</span>
                     </div>
                     break;
+
                 case QuizStatus.DoneFailed:
                     <div class="alert-box failed">
                         <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">

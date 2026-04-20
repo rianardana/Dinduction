@@ -20,4 +20,6 @@ public class RecordTrainingVM
         public int QuizNumber { get; set; }
         public int Score { get; set; }
         public int TrainerId { get; set; }
+        public string TrainingType { get; set; }
+        public string StepType { get; set; }
     }

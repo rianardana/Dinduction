@@ -44,6 +44,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<VRecordTraining> VRecordTrainings { get; set; }
 
     public virtual DbSet<VResult> VResults { get; set; }
+    public virtual DbSet<LearningMaterial> LearningMaterials { get; set; }
+    public virtual DbSet<UserLearningProgress> UserLearningProgresses { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -286,6 +288,32 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.RecordDate).HasColumnType("datetime");
             entity.Property(e => e.TrainingName).HasMaxLength(500);
             entity.Property(e => e.UserName).HasMaxLength(50);
+        });
+
+        
+        modelBuilder.Entity<LearningMaterial>(entity =>
+        {
+            entity.ToTable("LearningMaterial");
+            entity.HasOne(d => d.Training).WithMany(p => p.LearningMaterials)
+                .HasForeignKey(d => d.TrainingId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserLearningProgress>(entity =>
+        {
+            entity.ToTable("UserLearningProgress");
+            
+            // Composite Index untuk performa query based on User & Year
+            entity.HasIndex(p => new { p.UserId, p.TrainingYear })
+                .HasDatabaseName("IX_UserLearningProgress_UserId_Year");
+                
+            entity.HasOne(d => d.User).WithMany(p => p.UserLearningProgresses)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(d => d.Material).WithMany(p => p.UserLearningProgresses)
+                .HasForeignKey(d => d.MaterialId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

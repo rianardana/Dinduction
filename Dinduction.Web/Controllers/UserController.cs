@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
 using Dinduction.Application.Interfaces;
+using Dinduction.Domain.Entities;
 using Dinduction.Infrastructure.Helpers;
 using Dinduction.Web.Models;
 using Microsoft.AspNetCore.Http;
@@ -18,12 +19,14 @@ namespace Dinduction.Web.Controllers
         private readonly IUserService _service;
         private readonly IRoleService _serviceRole;
         private readonly IMapper _mapper;
+        private readonly IPasswordService _passwordService;
 
-        public UserController(IUserService service, IRoleService serviceRole, IMapper mapper)
+        public UserController(IUserService service, IRoleService serviceRole, IMapper mapper, IPasswordService passwordService)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _serviceRole = serviceRole ?? throw new ArgumentNullException(nameof(serviceRole));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
         }
 
         private async Task<List<SelectListItem>> GetRoleAsync()
@@ -62,6 +65,11 @@ namespace Dinduction.Web.Controllers
             }
         }
 
+        public async Task<IActionResult> SubMenu()
+        {
+            return View();
+        }
+
         // GET: User/Create
         public async Task<IActionResult> Create()
         {
@@ -69,11 +77,17 @@ namespace Dinduction.Web.Controllers
             try
             {
                 model.ListRole = new SelectList(await GetRoleAsync(), "Value", "Text");
+                model.ListTrainingType = new SelectList(new[]
+                {
+                    new { Value = "I", Text = "Induction" },
+                    new { Value = "R", Text = "Refresh" }
+                }, "Value", "Text");
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
             }
+
             return View(model);
         }
 
@@ -82,17 +96,14 @@ namespace Dinduction.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserVM model)
         {
-            if (!ModelState.IsValid)
-            {
-                model.ListRole = new SelectList(await GetRoleAsync(), "Value", "Text");
-                return View(model);
-            }
 
             try
             {
-                var entity = _mapper.Map<Dinduction.Domain.Entities.User>(model);
-                // default password policy in old app: set password = username
-                entity.Password = model.UserName;
+                var hashedPassword = _passwordService.HashPassword(model.UserName);
+                var entity = _mapper.Map<User>(model);
+                
+                entity.Password = hashedPassword;
+                
                 await _service.InsertAsync(entity);
 
                 TempData["SuccessMessage"] = "User berhasil ditambahkan.";
@@ -102,9 +113,16 @@ namespace Dinduction.Web.Controllers
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
                 model.ListRole = new SelectList(await GetRoleAsync(), "Value", "Text");
+                model.ListTrainingType = new SelectList(new[]
+                {
+                    new { Value = "I", Text = "Induction" },
+                    new { Value = "R", Text = "Refresh" }
+                }, "Value", "Text");
                 return View(model);
             }
         }
+
+
 
         // GET: User/UserWeekly
         public async Task<IActionResult> UserWeekly()
@@ -142,7 +160,7 @@ namespace Dinduction.Web.Controllers
             try
             {
                 using var stream = importexcelfile.OpenReadStream();
-                await ExcelHelper.UploadUserAsync(stream, _service);
+                await ExcelHelper.UploadUserAsync(stream, _service,_passwordService);
                 TempData["SuccessMessage"] = "Upload berhasil.";
             }
             catch (Exception ex)

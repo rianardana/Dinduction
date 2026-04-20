@@ -1,6 +1,7 @@
 ﻿@{
     var employeeName = Context.Session.GetString("EmployeeName") ?? "User";
     var role = Context.Session.GetString("Role") ?? "2";
+    var trainingType = Context.Session.GetString("TrainingType") ?? "I";
 }
 
 <!DOCTYPE html>
@@ -128,7 +129,7 @@
             {
                 <!-- Admin: 5 Card -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <a href="/User" class="block">
+                    <a href="/User/SubMenu" class="block">
                         <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-blue-50">
                             <div class="flex items-center">
                                 <img src="~/Images/user.png" alt="User" class="card-image" />
@@ -140,13 +141,13 @@
                         </div>
                     </a>
 
-                    <a href="/Dashboard" class="block">
+                    <a href="/Dashboard/countparticipant" class="block">
                         <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-green-50">
                             <div class="flex items-center">
                                 <img src="~/Images/dashboard.png" alt="Dashboard" class="card-image" />
                                 <div>
                                     <h3 class="font-semibold text-gray-800 text-lg">Training Dashboard</h3>
-                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Lihat statistik training harian, mingguan, dan bulanan.</p>
+                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Lihat statistik training per bulan selama setahun penuh.</p>
                                 </div>
                             </div>
                         </div>
@@ -210,6 +211,17 @@
                             </div>
                         </div>
                     </a>
+                    <a href="/Result/ParticipantResult" class="block">
+                        <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-green-50">
+                            <div class="flex items-center">
+                                <img src="~/Images/dashboard.png" alt="Result" class="card-image" />
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-lg">Participant's Result</h3>
+                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Lihat riwayat hasil kuis peserta </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
                     <a href="/Training" class="block">
                         <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-indigo-50">
@@ -244,7 +256,7 @@
                             <div class="flex items-center">
                                 <img src="~/Images/dashboard.png" alt="Result" class="card-image" />
                                 <div>
-                                    <h3 class="font-semibold text-gray-800 text-lg">Hasil Quiz Peserta</h3>
+                                    <h3 class="font-semibold text-gray-800 text-lg">My Participant's Result</h3>
                                     <p class="text-gray-500 text-xs mt-1 line-clamp-2">Lihat riwayat hasil kuis peserta didik kamu</p>
                                 </div>
                             </div>
@@ -267,51 +279,98 @@
             else
             {
                 <!-- User: 2 Card -->
-                <div class="grid grid-cols-1 gap-6">
-                    <!-- Card Materi Belajar - Coming Soon (Label Only) -->
-                <div class="relative block cursor-not-allowed">
-                    <a href="#" class="pointer-events-none block">
-                        <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-blue-50">
-                            <div class="flex items-center">
-                                <img src="~/Images/learn.png" alt="Quiz" class="card-image" />
-                                <div>
-                                    <h3 class="font-semibold text-gray-800 text-lg">Materi Belajar</h3>
-                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Video Pembelajaran — Langkah awal pengetahuan</p>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Label "Coming Soon" di pojok kanan atas -->
-                    <div class="coming-soon-badge">
-                        COMING SOON
+               <!-- User: Training Type Selection -->
+<div class="grid grid-cols-1 gap-6">
+    
+    <!-- Card Induction Training -->
+    @if (trainingType == "I")
+    {
+        <a href="/Learning/Index" class="block">
+            <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-gray-50 transition-all">
+                <div class="flex items-center">
+                    <div class="bg-gray-100 p-3 rounded-xl mr-4">
+                        <img src="~/Images/learn.png" alt="Induction" class="w-10 h-10" />
                     </div>
-</div>
-
-                    <a href="/Quiz/Index" class="block">
-                        <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-blue-50">
-                            <div class="flex items-center">
-                                <img src="~/Images/Quiz.png" alt="Quiz" class="card-image" />
-                                <div>
-                                    <h3 class="font-semibold text-gray-800 text-lg">Mulai Quiz</h3>
-                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Ambil kuis training kamu sekarang — waktunya buktikan kemampuanmu!</p>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="/Quiz/MyResult" class="block">
-                        <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-green-50">
-                            <div class="flex items-center">
-                                <img src="~/Images/Result.png" alt="Result" class="card-image" />
-                                <div>
-                                    <h3 class="font-semibold text-gray-800 text-lg">Hasil Saya</h3>
-                                    <p class="text-gray-500 text-xs mt-1 line-clamp-2">Lihat riwayat kuis kamu — pelajari hasilnya dan tingkatkan performa!</p>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-800 text-lg">Induction Training</h3>
+                        <p class="text-gray-500 text-xs mt-1">Baca materi pembelajaran terlebih dahulu</p>
+                    </div>
+                    <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1 rounded-full border border-gray-200">Active</span>
                 </div>
+            </div>
+        </a>
+    }
+    else
+    {
+        <div class="block cursor-not-allowed">
+            <div class="card bg-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 opacity-60">
+                <div class="flex items-center">
+                    <div class="bg-gray-200 p-3 rounded-xl mr-4">
+                        <img src="~/Images/learn.png" alt="Induction" class="w-10 h-10 grayscale opacity-50" />
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-400 text-lg">Induction Training</h3>
+                        <p class="text-gray-400 text-xs mt-1">Tidak tersedia untuk tipe training Anda</p>
+                    </div>
+                    <span class="bg-gray-200 text-gray-500 text-xs font-semibold px-3 py-1 rounded-full border border-gray-300">
+                        Terkunci
+                    </span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Card Refresh Training -->
+    @if (trainingType == "R")
+    {
+        <a href="/Quiz/Index" class="block">
+            <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-gray-50 transition-all">
+                <div class="flex items-center">
+                    <div class="bg-gray-100 p-3 rounded-xl mr-4">
+                        <img src="~/Images/Quiz.png" alt="Refresh" class="w-10 h-10" />
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-800 text-lg">Refresh Training</h3>
+                        <p class="text-gray-500 text-xs mt-1">Pre-Test wajib sebelum membaca materi</p>
+                    </div>
+                    <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1 rounded-full border border-gray-200">Active</span>
+                </div>
+            </div>
+        </a>
+    }
+    else
+    {
+        <div class="block cursor-not-allowed">
+            <div class="card bg-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 opacity-60">
+                <div class="flex items-center">
+                    <div class="bg-gray-200 p-3 rounded-xl mr-4">
+                        <img src="~/Images/Quiz.png" alt="Refresh" class="w-10 h-10 grayscale opacity-50" />
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-400 text-lg">Refresh Training</h3>
+                        <p class="text-gray-400 text-xs mt-1">Tidak tersedia untuk tipe training Anda</p>
+                    </div>
+                    <span class="bg-gray-200 text-gray-500 text-xs font-semibold px-3 py-1 rounded-full border border-gray-300">
+                        Terkunci
+                    </span>
+                </div>
+            </div>
+        </div>
+    }
+
+                <!-- Card Hasil Saya (tetap ada) -->
+                <a href="/Quiz/MyResult" class="block">
+                    <div class="card bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:bg-green-50">
+                        <div class="flex items-center">
+                            <img src="~/Images/Result.png" alt="Result" class="card-image" />
+                            <div>
+                                <h3 class="font-semibold text-gray-800 text-lg">Hasil Saya</h3>
+                                <p class="text-gray-500 text-xs mt-1 line-clamp-2">Lihat riwayat kuis kamu</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+</div>
             }
 
         </div>

@@ -41,10 +41,12 @@ namespace Dinduction.Application.Interfaces
         Task<List<UserTrainingDTO>> GetLatestResultForUserAsync(int participantId);
         Task<bool> HasIncompleteQuizAsync(int trainingId, int participantId, int quizNo);
         Task<int> GetLastQuizNoAsync(int participantId, int trainingId);
-        Task<QuizStatus> GetQuizStatusAsync(int trainingId, int participantId);
+        Task<QuizStatus> GetQuizStatusAsync(int trainingId, int participantId, int quizNo);
         Task<bool> CheckPassedPreviousAsync(int trainingId, int participantId, int prevQuizNo);
         Task<List<VRecordMaster>> GetLatestResultByParticipantAsync(int participantId);
         Task<RecordTraining> GetLastRecordByParticipantAsync(int participantId);
+        Task<(List<RefreshComparisonDto> Data, int TotalCount)> SearchRefreshByTrainerAsync(DataTableAjaxPostModel model, int trainerId);
+        Task<(List<RefreshComparisonDto> Data, int TotalCount)> SearchRefreshByAdminAsync(DataTableAjaxPostModel model);
 
         Task<(List<VRecordMaster> Data, int TotalCount)> SearchResultAsync(DataTableAjaxPostModel model, int participantId);
         Task<(List<VRecordMaster> Data, int TotalCount)> SearchByTrainerAsync(DataTableAjaxPostModel model, int trainerId);
@@ -59,5 +61,15 @@ namespace Dinduction.Application.Interfaces
         //batch
         Task<Dictionary<int, int>> CountCompletedBatchAsync(List<int> participantIds, int trainerId);
         Task<Dictionary<int, int>> CountFailedBatchAsync(List<int> participantIds, int trainerId);
+        // Tambah method ini
+        Task<bool> IsQuizCompletedAsync(int participantId, int trainingId, int quizNo);
+        Task<List<RefreshDetailDto>> GetRefreshDetailsByParticipantAsync(int participantId, int trainerId);
+
+        
+        Task<List<object>> GetTrainingsByDateByTrainerAsync(DateTime? date, int trainerId, string trainingType);
+        Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId);
+        Task<Dictionary<int, int>> CountFailedBatchForAdminAsync(List<int> participantIds);
+        Task<Dictionary<int, int>> CountCompletedBatchForAdminAsync(List<int> participantIds);
+        
     }
 }

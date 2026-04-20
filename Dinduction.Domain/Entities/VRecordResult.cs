@@ -17,7 +17,7 @@ public partial class VRecordResult
 
     public int? TrainerId { get; set; }
 
-    public DateOnly? TrainingDate { get; set; }
+    public DateTime? TrainingDate { get; set; }
 
     public string? UserName { get; set; }
 
@@ -35,7 +35,7 @@ public partial class VRecordResult
 
     public string? PurposeEnglish2 { get; set; }
 
-    public DateOnly? FormDateRegistration { get; set; }
+    public DateTime? FormDateRegistration { get; set; }
 
     public string? FormNumberRegistration { get; set; }
 

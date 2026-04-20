@@ -20,7 +20,8 @@ public class TrainingService : ITrainingService
 
     public async Task<MasterTraining?> GetByIdAsync(int id)
     {
-        return await _uow.Repository<MasterTraining>().GetAsync(t => t.Id == id);
+        var all = await _uow.Repository<MasterTraining>().GetAllAsync();
+    return all.FirstOrDefault(x => x.Id == id && (x.IsActive ?? true));
     }
 
     public async Task InsertAsync(MasterTraining obj)

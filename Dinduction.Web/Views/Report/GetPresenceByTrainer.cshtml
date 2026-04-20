@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Training Report";
     Layout = "_Layout";
+    var activePage = "Induction";
 }
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -20,6 +21,25 @@
                         <p class="text-gray-500 mt-1">View and manage training attendance</p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+       <div class="flex justify-center mb-6">
+            <div class="inline-flex rounded-xl shadow-sm bg-white border border-gray-200 p-1">
+                <a href="@Url.Action("GetPresenceByTrainer", "Report")"
+                class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                style="@(activePage == "Induction" 
+                    ? "background-color:#2563eb; color:white; box-shadow:0 1px 2px rgba(0,0,0,0.1);" 
+                    : "color:#6b7280;")">
+                    &#127891; Induction
+                </a>
+                <a href="@Url.Action("RefreshReport", "Report")"
+                class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                style="@(activePage == "Refresh" 
+                    ? "background-color:#9333ea; color:white; box-shadow:0 1px 2px rgba(0,0,0,0.1);" 
+                    : "color:#6b7280;")">
+                    &#128260; Refresh
+                </a>
             </div>
         </div>
 
@@ -102,6 +122,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Name</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training Date</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training Type</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -143,30 +164,25 @@ $(document).ready(function () {
     var trainingDates = [];
     var table;
 
-    console.log('🚀 Loading training dates...');
-
+    
     // Load training dates from server
     $.ajax({
         url: '@Url.Action("GetTrainingDatesByTrainer","Report")',
         method: 'GET',
         dataType: 'json',
         success: function (data) {
-            console.log('✅ Training dates loaded:', data);
-            console.log('📊 Total dates:', data ? data.length : 0);
-            
+          
             trainingDates = data || [];
             initializeDatepicker();
         },
         error: function (xhr, status, error) {
-            console.error('❌ Failed to load training dates:', error);
-            console.error('Status:', status);
-            console.error('Response:', xhr.responseText);
+       
             initializeDatepicker();
         }
     });
 
     function initializeDatepicker() {
-        console.log('📅 Initializing datepicker with', trainingDates.length, 'training dates');
+        
         
         $("#datepicker").datepicker({
             dateFormat: "yy-mm-dd",
@@ -180,14 +196,14 @@ $(document).ready(function () {
                 return [true, "", ""];
             },
             onSelect: function (dateText) {
-                console.log('📅 Selected date:', dateText);
+                
                 loadTrainings(dateText);
                 loadTable();
             }
         });
     }
 
-    // Load dropdown training by date
+
     function loadTrainings(date) {
         console.log('📚 Loading trainings for date:', date);
         
@@ -202,12 +218,12 @@ $(document).ready(function () {
                 $.each(data, function (i, item) {
                     ddl.append($('<option>').val(item.value).text(item.text));
                 });
-                console.log('✅ Added', data.length, 'training options');
+            
             } else {
-                console.log('⚠️ No trainings found for this date');
+                
             }
         }).fail(function (xhr, status, error) {
-            console.error('❌ Failed to load trainings:', error);
+        
         });
     }
 
@@ -219,20 +235,17 @@ $(document).ready(function () {
                 var date = $('#datepicker').val();
                 var trainingId = $('#Computer_DropDown').val() || 0;
                 
-                console.log('🔄 DataTables requesting data - Date:', date, 'TrainingId:', trainingId);
+                
                 
                 d.date = date;
                 d.trainingId = trainingId;
             },
             dataSrc: function(json) {
-                console.log('📦 DataTables received data:', json);
-                console.log('📊 Total records:', json ? json.length : 0);
+                
                 return json || [];
             },
             error: function (xhr, status, error) {
-                console.error('❌ DataTable AJAX error:', error);
-                console.error('❌ Status:', status);
-                console.error('❌ Response:', xhr.responseText);
+            
             }
         },
         searching: false,
@@ -241,21 +254,21 @@ $(document).ready(function () {
         dom: 't',
         columns: [
             { 
-                data: 'userName',  // ✅ GANTI ke camelCase
+                data: 'userName',  
                 defaultContent: '-',
                 render: function(data) {
                     return data || '-';
                 }
             },
             { 
-                data: 'employeeName',  // ✅ GANTI ke camelCase
+                data: 'employeeName',  
                 defaultContent: '-',
                 render: function(data) {
                     return data || '-';
                 }
             },
             {
-                data: 'trainingDate',  // ✅ GANTI ke camelCase
+                data: 'trainingDate',  
                 defaultContent: '-',
                 render: function (data) {
                     if (!data) return '-';
@@ -275,10 +288,20 @@ $(document).ready(function () {
                 }
             },
             { 
-                data: 'department',  // ✅ GANTI ke camelCase
+                data: 'department',  
                 defaultContent: '-',
                 render: function(data) {
                     return data || '-';
+                }
+            },
+            { 
+                data: 'trainingType',
+                defaultContent: '-',
+                render: function(data) {
+                    if (!data) return '-';
+                    if (data === 'I') return 'Induction';
+                    if (data === 'R') return 'Refresh';
+                    return data;
                 }
             }
         ],
@@ -342,8 +365,13 @@ $(document).ready(function () {
             '&trainingId=' + encodeURIComponent(trainingId);
     });
 
-    // Excel Button
-   
+    
+    function formatTrainingType(type) {
+    if (type === 'I') return 'Induction';
+    if (type === 'R') return 'Refresh';
+    return type || '-';
+}
+
     $('#btnExcel').on('click', function () {
         var date = $('#datepicker').val();
         var trainingId = $('#Computer_DropDown').val();
@@ -362,7 +390,7 @@ $(document).ready(function () {
         var exportData = [];
         
         // Add header
-        exportData.push(['No Badge', 'User Name', 'Training Date', 'Department']);
+        exportData.push(['No Badge', 'User Name', 'Training Date', 'Department','Training Type']);
         
         // Add rows from table
         table.rows().every(function() {
@@ -385,7 +413,8 @@ $(document).ready(function () {
                     row.userName || '-',
                     row.employeeName || '-',
                     trainingDate,
-                    row.department || '-'
+                    row.department || '-',
+                    formatTrainingType(row.trainingType)
                 ]);
             }
         });
@@ -398,7 +427,8 @@ $(document).ready(function () {
             { wch: 15 }, // No Badge
             { wch: 25 }, // User Name
             { wch: 15 }, // Training Date
-            { wch: 20 }  // Department
+            { wch: 20 }, // Department
+            { wch: 12 }  // Training Type
         ];
         
         // Add worksheet to workbook
