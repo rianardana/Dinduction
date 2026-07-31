@@ -1,0 +1,26 @@
+{
+  "name": "dinduction.web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "chart.js": "^4.5.1",
+    "datatables.net": "^3.0.0",
+    "datatables.net-dt": "^3.0.0",
+    "jquery": "^4.0.0",
+    "jquery-ui-dist": "^1.13.3",
+    "jquery-validation": "^1.22.1",
+    "jquery-validation-unobtrusive": "^4.0.0",
+    "notyf": "^3.10.0",
+    "pdfjs-dist": "^6.2.108",
+    "sheetjs": "^2.0.0",
+    "xlsx": "^0.18.5"
+  }
+}

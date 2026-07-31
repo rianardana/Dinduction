@@ -7,7 +7,6 @@
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
-        <!-- Header Card -->
         <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -43,10 +42,8 @@
             </div>
         </div>
 
-        <!-- Filter Card -->
         <div class="bg-white rounded-2xl shadow-md p-6 mb-6 border border-gray-100">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <!-- Date Picker -->
                 <div class="md:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,7 +58,6 @@
                            placeholder="Pick a date" />
                 </div>
 
-                <!-- Training Dropdown -->
                 <div class="md:col-span-2 lg:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,7 +72,6 @@
                     </select>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="flex flex-col space-y-3 md:col-span-2 lg:col-span-2">
                     <button type="button" 
                             id="btnPreviewForm" 
@@ -86,23 +81,11 @@
                         </svg>
                         <span>Preview Form</span>
                     </button>
-
-                    <button type="button" 
-                            id="btnDownloadForm" 
-                            class="w-full px-4 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        <span>Download Form</span>
-                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- DataTable Card -->
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-            <!-- Table Header -->
-            
         <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-between">
             <h2 class="text-xl font-bold text-white">Attendance List</h2>
             <button id="btnExcel" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2">
@@ -113,7 +96,6 @@
             </button>
         </div>
 
-            <!-- Table -->
             <div class="p-6">
                 <table id="presenceTable" class="display nowrap w-full">
                     <thead class="bg-gray-50">
@@ -126,7 +108,6 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- Data will be loaded by DataTables -->
                     </tbody>
                 </table>
             </div>
@@ -143,47 +124,32 @@
 </div>
 
 @section Scripts {
-    <!-- CDN Styles -->
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.min.css">
-
-    <!-- CDN Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script> 
+    <link rel="stylesheet" href="~/css/jquery-ui.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dataTables.dataTables.min.css" asp-append-version="true" />
+    <script src="~/js/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/js/jquery-ui.min.js" asp-append-version="true"></script>
+    <script src="~/js/dataTables.v2.min.js" asp-append-version="true"></script>
+    <script src="~/js/xlsx.full.min.js" asp-append-version="true"></script> 
 
 <script>
 $(document).ready(function () {
     var trainingDates = [];
     var table;
 
-    
-    // Load training dates from server
     $.ajax({
         url: '@Url.Action("GetTrainingDatesByTrainer","Report")',
         method: 'GET',
         dataType: 'json',
         success: function (data) {
-          
             trainingDates = data || [];
             initializeDatepicker();
         },
-        error: function (xhr, status, error) {
-       
+        error: function () {
             initializeDatepicker();
         }
     });
 
     function initializeDatepicker() {
-        
-        
         $("#datepicker").datepicker({
             dateFormat: "yy-mm-dd",
             beforeShowDay: function (date) {
@@ -196,20 +162,14 @@ $(document).ready(function () {
                 return [true, "", ""];
             },
             onSelect: function (dateText) {
-                
                 loadTrainings(dateText);
                 loadTable();
             }
         });
     }
 
-
     function loadTrainings(date) {
-        console.log('📚 Loading trainings for date:', date);
-        
         $.getJSON('@Url.Action("GetTrainingsByDateByTrainer", "Report")', { date: date }, function (data) {
-            console.log('✅ Trainings loaded:', data);
-            
             var ddl = $("#Computer_DropDown");
             ddl.empty();
             ddl.append($('<option>').val("").text("-- Select Training --"));
@@ -218,34 +178,19 @@ $(document).ready(function () {
                 $.each(data, function (i, item) {
                     ddl.append($('<option>').val(item.value).text(item.text));
                 });
-            
-            } else {
-                
             }
-        }).fail(function (xhr, status, error) {
-        
         });
     }
 
-    // Init DataTable
     table = $('#presenceTable').DataTable({
         ajax: {
             url: '@Url.Action("GetPresenceDataByTrainer", "Report")',
             data: function (d) {
-                var date = $('#datepicker').val();
-                var trainingId = $('#Computer_DropDown').val() || 0;
-                
-                
-                
-                d.date = date;
-                d.trainingId = trainingId;
+                d.date = $('#datepicker').val();
+                d.trainingId = $('#Computer_DropDown').val() || 0;
             },
             dataSrc: function(json) {
-                
                 return json || [];
-            },
-            error: function (xhr, status, error) {
-            
             }
         },
         searching: false,
@@ -256,51 +201,36 @@ $(document).ready(function () {
             { 
                 data: 'userName',  
                 defaultContent: '-',
-                render: function(data) {
-                    return data || '-';
-                }
+                render: function(data) { return data || '-'; }
             },
             { 
                 data: 'employeeName',  
                 defaultContent: '-',
-                render: function(data) {
-                    return data || '-';
-                }
+                render: function(data) { return data || '-'; }
             },
             {
                 data: 'trainingDate',  
                 defaultContent: '-',
                 render: function (data) {
                     if (!data) return '-';
-
-                    // Parse ISO 8601 date format (2026-01-24T12:10:59.5)
                     var dt = new Date(data);
-
                     if (isNaN(dt.getTime())) return '-';
-
-                    var day = String(dt.getDate()).padStart(2, '0');
-                    var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    var month = monthNames[dt.getMonth()];
-                    var year = dt.getFullYear();
-
-                    return `${day}-${month}-${year}`;
+                    var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    return `${String(dt.getDate()).padStart(2, '0')}-${monthNames[dt.getMonth()]}-${dt.getFullYear()}`;
                 }
             },
             { 
                 data: 'department',  
                 defaultContent: '-',
-                render: function(data) {
-                    return data || '-';
-                }
+                render: function(data) { return data || '-'; }
             },
-            { 
+                       { 
                 data: 'trainingType',
                 defaultContent: '-',
                 render: function(data) {
                     if (!data) return '-';
-                    if (data === 'I') return 'Induction';
-                    if (data === 'R') return 'Refresh';
+                    if (data === 'I') return '<span class="badge-induction">Induction</span>';
+                    if (data === 'R') return '<span style="display:inline-flex; align-items:center; padding:2px 10px; border-radius:9999px; font-size:12px; font-weight:600; background-color:#fce7f3; color:#9d174d;">Refresh</span>';
                     return data;
                 }
             }
@@ -313,28 +243,19 @@ $(document).ready(function () {
         }
     });
 
-    // Dropdown change event
     $('#Computer_DropDown').on('change', function () {
-        var selectedValue = $(this).val();
-        console.log('🔄 Training dropdown changed:', selectedValue);
         loadTable();
     });
 
     function loadTable() {
-        console.log('🔄 Reloading table data...');
         if (table) {
-            table.ajax.reload(function (json) {
-                console.log('✅ Table reloaded with', json ? json.length : 0, 'records');
-            }, false); // false = keep current page
+            table.ajax.reload(null, false);
         }
     }
 
-    // Preview Form Button
     $('#btnPreviewForm').on('click', function () {
         var date = $('#datepicker').val();
         var trainingId = $('#Computer_DropDown').val();
-
-        console.log('👁️ Preview clicked - Date:', date, 'Training ID:', trainingId);
 
         if (!date || !trainingId) {
             alert('Please select date and training first');
@@ -348,30 +269,6 @@ $(document).ready(function () {
         window.open(url, '_blank');
     });
 
-    // Download Form Button
-    $('#btnDownloadForm').on('click', function () {
-        var date = $('#datepicker').val();
-        var trainingId = $('#Computer_DropDown').val();
-
-        console.log('📥 Download clicked - Date:', date, 'Training ID:', trainingId);
-
-        if (!date || !trainingId) {
-            alert('Please select date and training first');
-            return;
-        }
-
-        window.location.href = '@Url.Action("DownloadTrainingForm", "Report")' +
-            '?date=' + encodeURIComponent(date) + 
-            '&trainingId=' + encodeURIComponent(trainingId);
-    });
-
-    
-    function formatTrainingType(type) {
-    if (type === 'I') return 'Induction';
-    if (type === 'R') return 'Refresh';
-    return type || '-';
-}
-
     $('#btnExcel').on('click', function () {
         var date = $('#datepicker').val();
         var trainingId = $('#Computer_DropDown').val();
@@ -380,19 +277,11 @@ $(document).ready(function () {
             alert('Please select date and training first');
             return;
         }
-
-        console.log('📊 Exporting to Excel - Date:', date, 'Training ID:', trainingId);
         
-        // Create workbook
         var wb = XLSX.utils.book_new();
-        
-        // Prepare data
         var exportData = [];
-        
-        // Add header
         exportData.push(['No Badge', 'User Name', 'Training Date', 'Department','Training Type']);
         
-        // Add rows from table
         table.rows().every(function() {
             var row = this.data();
             if (row) {
@@ -401,8 +290,7 @@ $(document).ready(function () {
                     var dt = new Date(row.trainingDate);
                     if (!isNaN(dt.getTime())) {
                         var day = String(dt.getDate()).padStart(2, '0');
-                        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                         var month = monthNames[dt.getMonth()];
                         var year = dt.getFullYear();
                         trainingDate = `${day}-${month}-${year}`;
@@ -414,144 +302,54 @@ $(document).ready(function () {
                     row.employeeName || '-',
                     trainingDate,
                     row.department || '-',
-                    formatTrainingType(row.trainingType)
+                    row.trainingType === 'I' ? 'Induction' : (row.trainingType === 'R' ? 'Refresh' : row.trainingType)
                 ]);
             }
         });
         
-        // Create worksheet
         var ws = XLSX.utils.aoa_to_sheet(exportData);
-        
-        // Set column widths
         ws['!cols'] = [
-            { wch: 15 }, // No Badge
-            { wch: 25 }, // User Name
-            { wch: 15 }, // Training Date
-            { wch: 20 }, // Department
-            { wch: 12 }  // Training Type
+            { wch: 15 },
+            { wch: 25 },
+            { wch: 15 },
+            { wch: 20 },
+            { wch: 12 }
         ];
         
-        // Add worksheet to workbook
         XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-        
-        // Generate filename
-        var filename = 'Training_Report_' + date + '.xlsx';
-        
-        // Download
-        XLSX.writeFile(wb, filename);
-        
-        console.log('✅ Excel exported successfully');
+        XLSX.writeFile(wb, 'Training_Report_' + date + '.xlsx');
     });
 });
 </script>
 
     <style>
-        /* Custom jQuery UI Datepicker Styling */
-        .ui-datepicker {
-            background: white;
-            border: 2px solid #3b82f6;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-        }
-
-        .ui-datepicker-header {
-            background: linear-gradient(to right, #3b82f6, #6366f1);
-            color: white;
+        .ui-datepicker { background: white; border: 2px solid #3b82f6; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); padding: 10px; }
+        .ui-datepicker-header { background: linear-gradient(to right, #3b82f6, #6366f1); color: white; font-weight: 600; border: none; border-radius: 8px 8px 0 0; padding: 10px; }
+        .ui-datepicker-prev, .ui-datepicker-next { color: white !important; }
+        .ui-datepicker-calendar th { color: #6b7280; font-weight: 600; padding: 8px; }
+        .ui-datepicker-calendar td { padding: 4px; }
+        .ui-datepicker-calendar a { color: #1f2937; font-weight: 500; border-radius: 6px; transition: all 0.2s; display: block; padding: 4px; }
+        .ui-datepicker-calendar a:hover { background: #dbeafe; color: #1e40af; }
+        .ui-datepicker-calendar .ui-state-active { background: #3b82f6 !important; color: white !important; }
+        .training-day a { background-color: #16a34a !important; color: #fff !important; font-weight: 600; border-radius: 6px !important; }
+        .training-day a:hover { background-color: #15803d !important; transform: scale(1.05); }
+        
+        #presenceTable_wrapper { font-family: 'Inter', sans-serif; }
+        #presenceTable tbody tr { background: white; transition: all 0.2s; border-bottom: 1px solid #f3f4f6; }
+        #presenceTable tbody td { padding: 14px 16px; color: #4b5563; border: none; text-align: left !important; vertical-align: middle; }
+        #presenceTable thead th { font-weight: 600; color: #374151; padding: 12px 16px; border-bottom: 2px solid #e5e7eb; position: sticky; top: 0; background: white; z-index: 10; text-align: left !important; }
+        #presenceTable tbody tr:hover { background: #f5f3ff; }
+        
+        /* Styling Badge Training Type agar mirip Admin */
+        .badge-induction {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
             font-weight: 600;
-            border: none;
-            border-radius: 8px 8px 0 0;
-            padding: 10px;
-        }
-
-        .ui-datepicker-prev,
-        .ui-datepicker-next {
-            color: white !important;
-        }
-
-        .ui-datepicker-calendar th {
-            color: #6b7280;
-            font-weight: 600;
-            padding: 8px;
-        }
-
-        .ui-datepicker-calendar td {
-            padding: 4px;
-        }
-
-        .ui-datepicker-calendar a {
-            color: #1f2937;
-            font-weight: 500;
-            border-radius: 6px;
-            transition: all 0.2s;
-            display: block;
-            padding: 4px;
-        }
-
-        .ui-datepicker-calendar a:hover {
-            background: #dbeafe;
+            background-color: #dbeafe;
             color: #1e40af;
-        }
-
-        .ui-datepicker-calendar .ui-state-active {
-            background: #3b82f6 !important;
-            color: white !important;
-        }
-
-        /* Training day highlight - Hijau */
-        .training-day a {
-            background-color: #16a34a !important;
-            color: #fff !important;
-            font-weight: 600;
-            border-radius: 6px !important;
-        }
-
-        .training-day a:hover {
-            background-color: #15803d !important;
-            transform: scale(1.05);
-        }
-
-        /* Modern DataTables Styling */
-        #presenceTable_wrapper {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-
-        #presenceTable {
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        #presenceTable thead th {
-            font-weight: 600;
-            color: #374151;
-            padding: 12px 16px;
-            background: none;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        #presenceTable tbody tr {
-            background: white;
-            transition: all 0.2s;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        #presenceTable tbody td {
-            padding: 14px 16px;
-            color: #4b5563;
-            border: none;
-        }
-
-        #presenceTable tbody tr:hover {
-            background: #f9fafb;
-        }
-
-        /* Remove default DataTables borders */
-        .dataTables_wrapper .dataTables_scrollBody {
-            border: none !important;
-        }
-
-        .dataTables_wrapper .dataTables_scrollBody table {
-            border: none !important;
         }
     </style>
 }

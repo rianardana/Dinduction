@@ -7,6 +7,7 @@ using Dinduction.Web.Models;
 using Dinduction.Application.Interfaces;
 using Dinduction.Application.Models;
 using Dinduction.Web.Services.Pdf.Interfaces;
+using Dinduction.Domain.Entities;
 
 namespace Dinduction.Web.Controllers
 {
@@ -607,8 +608,8 @@ public async Task<IActionResult> PrintPDFHistory(int trainingId, int participant
         {
             try
             {
-                
                 var (data, totalCount) = await _recordTrainingService.SearchRefreshByAdminAsync(model);
+                
                 var mapped = _mapper.Map<List<RefreshComparisonVM>>(data);
 
                 return Json(new
@@ -621,8 +622,7 @@ public async Task<IActionResult> PrintPDFHistory(int trainingId, int participant
             }
             catch (Exception ex)
             {
-                return Json(new 
-                { 
+                return Json(new { 
                     draw = model.draw, 
                     recordsTotal = 0, 
                     recordsFiltered = 0, 
@@ -650,8 +650,24 @@ public async Task<IActionResult> PrintPDFHistory(int trainingId, int participant
             }
         }
 
-       [HttpGet]
-public async Task<IActionResult> PrintQuiz(int trainingId, int participantId)
+        [HttpGet]
+        public async Task<JsonResult> GetRefreshDetailsAdmin(int participantId)
+        {
+            try
+            {
+                var data = await _recordTrainingService.GetRefreshDetailsByParticipantAdminAsync(participantId);
+                var mapped = _mapper.Map<List<RefreshDetailVM>>(data);
+
+                return Json(new { success = true, data = mapped });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+   [HttpGet]
+public async Task<IActionResult> PrintQuiz(int trainingId, int participantId, int? quizNumber = null)
 {
     if (trainingId == 0 || participantId == 0) return BadRequest();
 
@@ -660,21 +676,36 @@ public async Task<IActionResult> PrintQuiz(int trainingId, int participantId)
         var training = await _masterTrainingService.GetByIdAsync(trainingId);
         if (training == null) return NotFound("Training configuration not found.");
 
-        var entity = await _recordTrainingService.GetResultAsync(trainingId, participantId);
+        VRecordResult entity = quizNumber.HasValue 
+            ? await _recordTrainingService.GetResultHistoryAsync(trainingId, participantId, quizNumber.Value)
+            : await _recordTrainingService.GetResultAsync(trainingId, participantId);
+
         if (entity == null) return NotFound("Result data not found.");
 
-        var answers = await _questionService.GetListAnswerAsync(trainingId, participantId);
-        var score = await _recordTrainingService.GetScoreAsync(trainingId, participantId);
+        int targetQuizNumber = quizNumber ?? entity.QuizNumber ?? 0;
+        
+        var rawAnswers = await _questionService.GetListAnswerAsync(trainingId, participantId);
+        var score = await _recordTrainingService.GetScoreHistoryAsync(trainingId, participantId, targetQuizNumber);
 
         var model = _mapper.Map<ViewRecordResultVM>(entity);
-        model.QuestionAnswers = _mapper.Map<List<ViewQuestionAnswerUserVM>>(answers);
+        
+        // FIX: Filter dulu, baru Map. Jangan pakai ?? antar list beda tipe.
+        if (rawAnswers != null)
+        {
+            var filteredAnswers = rawAnswers.Where(a => a.QuizNumber == targetQuizNumber).ToList();
+            model.QuestionAnswers = _mapper.Map<List<ViewQuestionAnswerUserVM>>(filteredAnswers);
+        }
+        else
+        {
+            model.QuestionAnswers = new List<ViewQuestionAnswerUserVM>();
+        }
+        
         model.Score = score;
 
         var trainerId = await _recordTrainingService.GetTrainerAsync(participantId, trainingId);
         var userTrainerId = await _trainerService.GetUserIdByTrainerIdAsync(trainerId);
         model.TrainerName = await _userService.GetUserNameByIdAsync(userTrainerId);
 
-        // ✅ SAFE METADATA MAPPING
         model.TrainingName = training.TrainingName ?? "Unknown Training";
         model.EvaluationForm = training.EvaluationForm ?? "-";
         model.Purpose1 = training.Purpose1 ?? "-";
@@ -682,73 +713,23 @@ public async Task<IActionResult> PrintQuiz(int trainingId, int participantId)
         model.PurposeEnglish1 = training.PurposeEnglish1 ?? "-";
         model.PurposeEnglish2 = training.PurposeEnglish2 ?? "-";
         model.FormNumberRegistration = training.FormNumberRegistration ?? "N/A";
-
         model.FormDateRegistration = training.FormDateRegistration?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now;
         model.TrainingDate = training.FormDateRegistration?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now;
 
         ViewBag.PassFailed = score >= 80;
 
+        string fileName = $"Result_{training.TrainingName}_{model.EmployeeName}";
+        if (targetQuizNumber == 1) fileName += "_Test1";
+        if (targetQuizNumber == 2) fileName += "_Remedial";
+
         var pdfBytes = await _pdfGenerator.GenerateTrainingResultPdfAsync(model);
-        return File(pdfBytes, "application/pdf", $"Result_{training.TrainingName}_{model.EmployeeName}.pdf");
+        return File(pdfBytes, "application/pdf", $"{fileName}.pdf");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[PDF] ERROR: {ex.Message}\n{ex.StackTrace}");
         return BadRequest($"Failed to generate PDF: {ex.Message}");
     }
 }
-        
-        public async Task<IActionResult> PrintPDF(int trainingId, int participantId)
-{
-    if (trainingId == 0 || participantId == 0)
-        return BadRequest();
-
-    try
-    {
-        // 1️⃣ Ambil Metadata Training (Purpose, Form No, Dates ada di sini)
-        var training = await _masterTrainingService.GetByIdAsync(trainingId);
-        if (training == null) return NotFound("Training configuration not found.");
-
-        // 2️⃣ Ambil Result & Answers
-        var entity = await _recordTrainingService.GetResultAsync(trainingId, participantId);
-        if (entity == null) return NotFound("Result data not found.");
-        
-        var answers = await _questionService.GetListAnswerAsync(trainingId, participantId);
-        var score = await _recordTrainingService.GetScoreAsync(trainingId, participantId);
-
-        // 3️⃣ Mapping Utama
-        var model = _mapper.Map<ViewRecordResultVM>(entity);
-        model.QuestionAnswers = _mapper.Map<List<ViewQuestionAnswerUserVM>>(answers);
-        model.Score = score;
-
-        // 4️⃣ Trainer Info
-        var trainerId = await _recordTrainingService.GetTrainerAsync(participantId, trainingId);
-        var userTrainerId = await _trainerService.GetUserIdByTrainerIdAsync(trainerId);
-        model.TrainerName = await _userService.GetUserNameByIdAsync(userTrainerId);
-
-        // 5️⃣ ✅ SAFE METADATA MAPPING (DARI MasterTraining, BUKAN VQuestionAnswerUser)
-        model.TrainingName = training.TrainingName ?? "Unknown Training";
-        model.EvaluationForm = training.EvaluationForm ?? "-";
-        model.Purpose1 = training.Purpose1 ?? "-";
-        model.Purpose2 = training.Purpose2 ?? "-";
-        model.PurposeEnglish1 = training.PurposeEnglish1 ?? "-";
-        model.PurposeEnglish2 = training.PurposeEnglish2 ?? "-";
-        model.FormNumberRegistration = training.FormNumberRegistration ?? "N/A";
-
-        // ✅ SAFE DATE CONVERSION (DateOnly? di DB → DateTime? di VM)
-        model.FormDateRegistration = training.FormDateRegistration?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now;
-        model.TrainingDate = training.FormDateRegistration?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Now;
-
-        ViewBag.PassFailed = score >= 80;
-        return View(model);
-    }
-    catch (Exception ex)
-    {
-        ModelState.AddModelError("", ex.Message);
-        return View(new ViewRecordResultVM());
-    }
-}
-
 
     }
 }

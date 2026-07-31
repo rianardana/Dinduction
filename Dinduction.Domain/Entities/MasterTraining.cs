@@ -26,6 +26,8 @@ public partial class MasterTraining
     public string? FormNumberRegistration { get; set; }
 
     public bool? IsActive { get; set; }
+    public decimal? InductionDuration { get; set; }
+    public decimal? RefreshDuration { get; set; }
 
     public virtual ICollection<ParticipantUser> ParticipantUsers { get; set; } = new List<ParticipantUser>();
 

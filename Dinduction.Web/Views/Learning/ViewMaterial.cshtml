@@ -6,7 +6,7 @@
 }
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    /* Font local/system fallback */
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -378,9 +378,9 @@
 
 @if (!string.IsNullOrEmpty(Model?.FilePath))
 {
-    <script src="https://unpkg.com/pdfjs-dist@@3.11.174/build/pdf.min.js"></script>
+    <script src="~/lib/pdfjs/pdf.min.js" asp-append-version="true"></script>
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@@3.11.174/build/pdf.worker.min.js';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '@Url.Content("~/lib/pdfjs/pdf.worker.min.js")';
 
         const FILE_URL    = '@Model.FilePath';
         const pdfScroll   = document.getElementById('pdf-scroll');

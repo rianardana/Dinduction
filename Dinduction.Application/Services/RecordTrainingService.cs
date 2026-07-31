@@ -1113,6 +1113,72 @@ namespace Dinduction.Infrastructure.Services
             });
         }
 
+        public async Task<List<RefreshDetailDto>> GetRefreshDetailsByParticipantAdminAsync(int participantId)
+        {
+            return await Task.Run(() =>
+            {
+                var records = _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(c => c.ParticipantId == participantId
+                            && c.TrainingType == "R") 
+                    .ToList();
+
+                var result = records
+                    .GroupBy(c => new { c.TrainingId, c.StepType })
+                    .ToList();
+
+                var trainingIds = records.Select(r => r.TrainingId).Distinct().ToList();
+
+                var trainingNames = _uow.Repository<MasterTraining>()
+                    .Table()
+                    .Where(t => trainingIds.Contains(t.Id))
+                    .ToDictionary(t => t.Id, t => t.TrainingName);
+
+                var output = trainingIds.Select(trainingId =>
+                {
+                    var trainingRecords = records.Where(r => r.TrainingId == trainingId).ToList();
+
+                    var preRecords = trainingRecords.Where(r => r.StepType == "PreTest").ToList();
+                    int? preScore = null;
+                    if (preRecords.Any())
+                    {
+                        var lastPreQuiz = preRecords.Max(r => r.QuizNumber);
+                        var preAttempt = preRecords.Where(r => r.QuizNumber == lastPreQuiz).ToList();
+                        int totalPre = preAttempt.Count;
+                        int correctPre = preAttempt.Count(r => r.IsTrue == true);
+                        preScore = totalPre > 0 ? (int)Math.Round((double)correctPre / totalPre * 100) : 0;
+                    }
+
+                    var postRecords = trainingRecords.Where(r => r.StepType == "PostTest").ToList();
+                    int? postScore = null;
+                    if (postRecords.Any())
+                    {
+                        var lastPostQuiz = postRecords.Max(r => r.QuizNumber);
+                        var postAttempt = postRecords.Where(r => r.QuizNumber == lastPostQuiz).ToList();
+                        int totalPost = postAttempt.Count;
+                        int correctPost = postAttempt.Count(r => r.IsTrue == true);
+                        postScore = totalPost > 0 ? (int)Math.Round((double)correctPost / totalPost * 100) : 0;
+                    }
+
+                    var lastQuizNumber = trainingRecords.Max(r => r.QuizNumber);
+
+                    return new RefreshDetailDto
+                    {
+                        ParticipantId = participantId,
+                        TrainingId    = trainingId.Value,
+                        TrainingName  = trainingNames.ContainsKey(trainingId.Value) 
+                                        ? trainingNames[trainingId.Value] : "-",
+                        PreTestScore  = preScore,
+                        PostTestScore = postScore,
+                        QuizNumber    = lastQuizNumber.GetValueOrDefault()
+                    };
+                })
+                .OrderBy(r => r.TrainingName)
+                .ToList();
+
+                return output;
+            });
+        }
         public async Task<(List<RefreshComparisonDto> Data, int TotalCount)> SearchRefreshByAdminAsync(DataTableAjaxPostModel model)
         {
             return await Task.Run(() =>
@@ -1389,6 +1455,18 @@ namespace Dinduction.Infrastructure.Services
             return result;
         }       
 
+        public async Task<RecordTraining> GetFirstRecordAsync(int participantId, int trainingId, DateTime date)
+        {
+            return await Task.Run(() =>
+                _uow.Repository<RecordTraining>()
+                    .Table()
+                    .Where(r => r.ParticipantId == participantId 
+                            && r.TrainingId == trainingId 
+                            && r.RecordDate.HasValue 
+                            && r.RecordDate.Value.Date == date.Date)
+                    .FirstOrDefault()
+            );
+        }
         
 
     }

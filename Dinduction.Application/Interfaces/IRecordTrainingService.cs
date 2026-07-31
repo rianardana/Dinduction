@@ -54,6 +54,8 @@ namespace Dinduction.Application.Interfaces
         Task<(List<VRecordMaster> Data, int TotalCount)> SearchFailedAsync(DataTableAjaxPostModel model);
         Task<(List<VRecordMaster> Data, int TotalCount)> SearchForAuditAsync(DataTableAjaxPostModel model);
         Task<(IPagedList<VResult> Data, int TotalCount)> SearchRecordAsync(DataTableAjaxPostModel model);
+        Task<List<RefreshDetailDto>> GetRefreshDetailsByParticipantAdminAsync(int participantId);
+        Task<RecordTraining> GetFirstRecordAsync(int participantId, int trainingId, DateTime date);
 
         Task<List<VRecordMaster>> GetHistoryAsync(int participantId);
         Task<IEnumerable<VRecordMaster>> GetAllChartAsync(DateTime dateStart, DateTime dateEnd);

@@ -143,179 +143,149 @@ public class ParticipantService : IParticipantService
         return userIds;
     }
 
-//   public async Task<List<ParticipantUser>> GetPresenceAsync(DateTime date, int trainingId)
-//     {
-//         var targetDate = date.Date;
-        
-//         Expression<Func<ParticipantUser, bool>> predicate;
-        
-//         if (trainingId == 0)
-//         {
-//             predicate = c => c.TrainingDate.HasValue 
-//                 && c.TrainingDate.Value.Date == targetDate;
-//         }
-//         else
-//         {
-//             predicate = c => c.TrainingDate.HasValue 
-//                 && c.TrainingDate.Value.Date == targetDate 
-//                 && c.TrainingId == trainingId;
-//         }
-        
-    
-//         var data = await _uow.Repository<ParticipantUser>()
-//             .GetAllWithIncludesAsync(
-//                 predicate: predicate,
-//                 orderBy: null,
-//                 includeProperties: new[]
-//                 {
-//                     "User",          
-//                     "Training",       
-//                     "Trainer"         
-//                 }
-//             );
-        
-//         return data;
-//     }
 
 
-        public async Task<List<ParticipantUser>> GetPresenceAsync(DateTime date, int trainingId)
+  public async Task<List<ParticipantUser>> GetPresenceAsync(DateTime date, int trainingId)
+{
+    var targetDate = date.Date;
+    Console.WriteLine($"[DEBUG] Start GetPresenceAsync for Date: {targetDate}");
+
+    var userIds = await Task.Run(() =>
+    {
+        var joinResult = _uow.Repository<RecordTraining>()
+            .Table()
+            .Join(_uow.Repository<ParticipantUser>().Table(), 
+                  rt => rt.ParticipantId, 
+                  pu => pu.Id, 
+                  (rt, pu) => new { rt.RecordDate, rt.TrainingType, pu.UserId })
+            .Where(x => x.RecordDate.HasValue 
+                     && x.RecordDate.Value.Date == targetDate
+                     && x.UserId.HasValue) 
+            .Select(x => x.UserId.Value)
+            .Distinct()
+            .ToList();
+
+        Console.WriteLine($"[DEBUG] Found {joinResult.Count} UserIds with activity on {targetDate}");
+        
+        if (joinResult.Contains(2066))
         {
-            var targetDate = date.Date;
-            
-            
-            var activeParticipantIds = await Task.FromResult(
-                _uow.Repository<RecordTraining>()
-                    .Table()
-                    .Where(c => c.RecordDate.HasValue 
-                            && c.RecordDate.Value.Date == targetDate
-                            && (trainingId == 0 || c.TrainingId == trainingId))
-                    .Select(c => c.ParticipantId)
-                    .Distinct()
-                    .ToList()
-            );
-            
-        
-            var validIds = activeParticipantIds
-                .Where(id => id.HasValue)
-                .Select(id => id.Value)
-                .ToList();
-            
-            
-            if (!validIds.Any())
-                return new List<ParticipantUser>();
-            
-            
-            var data = await _uow.Repository<ParticipantUser>()
-                .GetAllWithIncludesAsync(
-                    predicate: c => validIds.Contains(c.Id), 
-                    orderBy: c => c.User.EmployeeName,      
-                    includeProperties: new[] { "User", "Training", "Trainer" }
-                );
-            
-            return data;
+            Console.WriteLine($"[DEBUG] SUCCESS: UserId 2066 (Fenni) FOUND in join result!");
+        }
+        else
+        {
+            Console.WriteLine($"[DEBUG] FAILURE: UserId 2066 (Fenni) NOT FOUND in join result.");
+            Console.WriteLine($"[DEBUG] Sample UserIds found: {string.Join(", ", joinResult.Take(5))}");
         }
 
-    // public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
-    // {
-    //     var targetDate = date.Date;
-    //     var query = _uow.Repository<ParticipantUser>().Table().Where(c => c.TrainerId == trainerId);
-    //     if (trainingId == 0)
-    //     {
-    //         return await Task.FromResult(
-    //             query.Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate).ToList()
-    //         );
-    //     }
-    //     return await Task.FromResult(
-    //         query.Where(c => c.TrainingDate.HasValue && c.TrainingDate.Value.Date == targetDate && c.TrainingId == trainingId).ToList()
-    //     );
-    // }
+        return joinResult;
+    });
 
-    // public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
-    // {
-    //     var targetDate = date.Date;
+    if (!userIds.Any())
+    {
+        Console.WriteLine("[DEBUG] No UserIds found, returning empty list.");
+        return new List<ParticipantUser>();
+    }
+
+    var participants = await Task.Run(() =>
+    {
+        var allRelevantParticipants = _uow.Repository<ParticipantUser>()
+            .Table()
+            .Where(pu => pu.UserId.HasValue && userIds.Contains(pu.UserId.Value))
+            .OrderByDescending(pu => pu.Id)
+            .ToList();
+
+        Console.WriteLine($"[DEBUG] Found {allRelevantParticipants.Count} raw ParticipantUser records for these UserIds.");
+
+        var grouped = allRelevantParticipants
+            .GroupBy(pu => pu.UserId.Value)
+            .Select(g => g.First())
+            .ToList();
+
+        Console.WriteLine($"[DEBUG] After grouping by UserId, we have {grouped.Count} unique participants.");
         
-    //     Expression<Func<ParticipantUser, bool>> predicate;
-        
-    //     if (trainingId == 0)
-    //     {
-    //         predicate = c => c.TrainerId == trainerId 
-    //             && c.TrainingDate.HasValue 
-    //             && c.TrainingDate.Value.Date == targetDate;
-    //     }
-    //     else
-    //     {
-    //         predicate = c => c.TrainerId == trainerId 
-    //             && c.TrainingDate.HasValue 
-    //             && c.TrainingDate.Value.Date == targetDate 
-    //             && c.TrainingId == trainingId;
-    //     }
-        
-        
-    //     var data = await _uow.Repository<ParticipantUser>()
-    //         .GetAllWithIncludesAsync(predicate: predicate,orderBy: null,includeProperties: new[]
-    //             {
-    //                 "User",          
-    //                 "Training",       
-    //                 "Trainer",        
-    //                 "Trainer.User",
-    //                 "RecordTrainings",
-    //                 "RecordTrainings.TrainingType"    
-    //             }
-    //         );
-        
-    //     return data;
-    // }
+        var fenniInList = grouped.FirstOrDefault(p => p.UserId == 2066);
+        if (fenniInList != null)
+        {
+            Console.WriteLine($"[DEBUG] SUCCESS: Fenni (UserId 2066) is in the final participant list!");
+        }
+        else
+        {
+            Console.WriteLine($"[DEBUG] FAILURE: Fenni (UserId 2066) is MISSING from the final participant list.");
+        }
+
+        return grouped;
+    });
+
+    var userIdsToLoad = participants.Select(p => p.UserId.Value).Distinct().ToList();
+    
+    if (userIdsToLoad.Any())
+    {
+        var users = await _uow.Repository<User>().GetAllAsync(u => userIdsToLoad.Contains(u.Id));
+        var userDict = users.ToDictionary(u => u.Id, u => u);
+
+        foreach (var p in participants)
+        {
+            if (userDict.TryGetValue(p.UserId.Value, out var user))
+            {
+                p.User = user;
+                p.TrainingDate = targetDate;
+            }
+        }
+    }
+
+    Console.WriteLine($"[DEBUG] Returning {participants.Count} participants.");
+    return participants;
+}
+
 
         public async Task<List<ParticipantUser>> GetPresenceByTrainerAsync(DateTime date, int trainingId, int trainerId)
+{
+    return await Task.Run(() =>
+    {
+        var records = _uow.Repository<RecordTraining>()
+            .Table()
+            .Where(r => r.TrainerId == trainerId
+                    && r.TrainingId == trainingId
+                    && r.TrainingType == "I"
+                    && (r.StepType == null || r.StepType == "Normal")
+                    && r.RecordDate.Value.Date == date.Date)
+            .ToList();
+
+        if (!records.Any()) return new List<ParticipantUser>();
+
+        var participantIds = records
+            .Select(r => r.ParticipantId)
+            .Where(id => id.HasValue)
+            .Select(id => id.Value)
+            .Distinct()
+            .ToList();
+
+        var participants = _uow.Repository<ParticipantUser>()
+            .Table()
+            .Where(p => participantIds.Contains(p.Id))
+            .ToList();
+
+        var userIds = participants
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToList();
+
+        var users = _uow.Repository<User>()
+            .Table()
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionary(u => u.Id, u => u);
+
+        foreach (var participant in participants)
         {
-            return await Task.Run(() =>
+            if (users.ContainsKey(participant.UserId.Value))
             {
-                
-                var records = _uow.Repository<RecordTraining>()
-                    .Table()
-                    .Where(r => r.TrainerId == trainerId
-                            && r.TrainingId == trainingId
-                            && r.TrainingType == "I"
-                            && (r.StepType == null || r.StepType == "Normal")
-                            && r.RecordDate.Value.Date == date.Date)
-                    .ToList();
-
-                if (!records.Any()) return new List<ParticipantUser>();
-
-                var participantIds = records
-                    .Select(r => r.ParticipantId)
-                    .Where(id => id.HasValue)
-                    .Select(id => id.Value)
-                    .Distinct()
-                    .ToList();
-
-                var participants = _uow.Repository<ParticipantUser>()
-                    .Table()
-                    .Where(p => participantIds.Contains(p.Id))
-                    .ToList();
-
-                var userIds = participants
-                    .Select(p => p.UserId)
-                    .Distinct()
-                    .ToList();
-
-                var users = _uow.Repository<User>()
-                    .Table()
-                    .Where(u => userIds.Contains(u.Id))
-                    .ToDictionary(u => u.Id, u => u);
-
-            
-                foreach (var participant in participants)
-                {
-                    if (users.ContainsKey(participant.UserId.Value))
-                    {
-                        participant.User = users[participant.UserId.Value];
-                    }
-                }
-
-                return participants;
-            });
+                participant.User = users[participant.UserId.Value];
+            }
         }
+
+        return participants;
+    });
+}
 
     
     public async Task<(List<ParticipantUser> participants, Dictionary<int, string> trainingTypes)> 
@@ -395,60 +365,152 @@ public class ParticipantService : IParticipantService
 
     public async Task<List<DateTime>> GetTrainingDatesAsync()
     {
-        var dates = await Task.FromResult(
-            _uow.Repository<ParticipantUser>().Table()
-                .Where(t => t.TrainingDate.HasValue)
-                .Select(t => t.TrainingDate.Value.Date)
+        return await Task.Run(() =>
+            _uow.Repository<RecordTraining>()
+                .Table()
+                .Where(r => r.RecordDate.HasValue) 
+                .ToList()
+                .Select(r => r.RecordDate.Value.Date)
                 .Distinct()
                 .OrderBy(d => d)
                 .ToList()
         );
-        return dates;
     }
 
-    public async Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId)
-        {
-            return await Task.Run(() =>
-                _uow.Repository<RecordTraining>()
-                    .Table()
-                    .Where(r => r.TrainerId == trainerId
-                            && r.TrainingType == "I"
-                            && (r.StepType == null || r.StepType == "Normal"))
-                    .ToList()
-                    .Select(r => r.RecordDate.Value.Date)
-                    .Distinct()
-                    .ToList()
-            );
+    public async Task<List<DateTime>> GetTrainingDatesByTypeAsync(string trainingType)
+    {
+        return await Task.Run(() =>
+            _uow.Repository<RecordTraining>()
+                .Table()
+                .Where(r => r.RecordDate.HasValue 
+                        && r.TrainingType == trainingType)
+                .Select(r => r.RecordDate.Value.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList()
+        );
+    }
+
+    public async Task<List<DateTime>> GetRefreshTrainingDatesAsync()
+    {
+        return await Task.Run(() =>
+            _uow.Repository<RecordTraining>()
+                .Table()
+                .Where(r => r.RecordDate.HasValue 
+                        && r.TrainingType == "R") 
+                .ToList()
+                .Select(r => r.RecordDate.Value.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList()
+        );
+    }
+
+   public async Task<List<DateTime>> GetTrainingDatesByTrainerAsync(int trainerId)
+{
+    return await Task.Run(() =>
+        _uow.Repository<RecordTraining>()
+            .Table()
+            .Where(r => r.RecordDate.HasValue 
+                    && r.TrainerId == trainerId
+                    && r.TrainingType == "I") 
+            .Select(r => r.RecordDate.Value.Date)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToList()
+    );
 }
 
     public async Task<List<TrainingDateDTO>> GetTrainingGroupedByDateAsync()
+    {
+        var all = await Task.FromResult(
+            _uow.Repository<ParticipantUser>().Table()
+                .Where(t => t.TrainingDate.HasValue && t.TrainingId.HasValue)
+                .ToList()
+        );
+
+        return all
+            .GroupBy(p => p.TrainingDate.Value.Date)
+            .Select(g => new TrainingDateDTO
+            {
+                Date = g.Key,
+                Trainings = g
+                    .GroupBy(p => p.TrainingId.Value)
+                    .Select(tg => new TrainingDto
+                    {
+                        TrainingId = tg.Key,
+                        
+                        TrainingName = tg.FirstOrDefault()?.Training?.TrainingName ?? "Unknown",
+                        TrainingDate = g.Key
+                    })
+                    .ToList()
+            })
+            .OrderBy(dto => dto.Date)
+            .ToList();
+    }
+
+    public async Task<Dictionary<int, int>> GetOriginalParticipantIdsAsync(DateTime date, List<int> userIds)
 {
-    var all = await Task.FromResult(
-        _uow.Repository<ParticipantUser>().Table()
-            .Where(t => t.TrainingDate.HasValue && t.TrainingId.HasValue)
+    if (!userIds.Any()) return new Dictionary<int, int>();
+
+    var mapping = new Dictionary<int, int>();
+
+    var records = await Task.Run(() =>
+        _uow.Repository<RecordTraining>()
+            .Table()
+            .Where(r => r.RecordDate.HasValue 
+                    && r.RecordDate.Value.Date == date.Date
+                    && r.TrainingType == "R")
             .ToList()
     );
 
-    return all
-        .GroupBy(p => p.TrainingDate.Value.Date)
-        .Select(g => new TrainingDateDTO
-        {
-            Date = g.Key,
-            Trainings = g
-                .GroupBy(p => p.TrainingId.Value)
-                .Select(tg => new TrainingDto
-                {
-                    TrainingId = tg.Key,
-                    // ✅ GANTI INI:
-                    TrainingName = tg.FirstOrDefault()?.Training?.TrainingName ?? "Unknown",
-                    TrainingDate = g.Key
-                })
-                .ToList()
-        })
-        .OrderBy(dto => dto.Date)
+    var validParticipantIds = records
+        .Where(r => r.ParticipantId.HasValue)
+        .Select(r => r.ParticipantId.Value)
+        .Distinct()
         .ToList();
-}
+    
+    if (!validParticipantIds.Any()) return mapping;
 
+    var participants = await Task.Run(() =>
+        _uow.Repository<ParticipantUser>()
+            .Table()
+            .Where(pu => validParticipantIds.Contains(pu.Id))
+            .ToList()
+    );
+
+    var puDict = new Dictionary<int, int>();
+    foreach (var p in participants)
+    {
+        if (p.UserId > 0)
+        {
+            puDict[p.Id] = p.UserId.Value;
+        }
+    }
+
+    foreach (var r in records)
+    {
+        if (r.ParticipantId.HasValue)
+        {
+            int currentPid = r.ParticipantId.Value;
+            
+            if (puDict.ContainsKey(currentPid))
+            {
+                int uid = puDict[currentPid];
+                
+                if (userIds.Contains(uid))
+                {
+                    if (!mapping.ContainsKey(uid))
+                    {
+                        mapping[uid] = currentPid;
+                    }
+                }
+            }
+        }
+    }
+
+    return mapping;
+}
         public async Task<List<TrainingDateDTO>> GetTrainingGroupedByDateByTrainerAsync(int trainerId)
         {
             var result = await Task.Run(() =>
@@ -580,33 +642,309 @@ public class ParticipantService : IParticipantService
             return await Task.Run(() =>
                 _uow.Repository<RecordTraining>()
                     .Table()
-                    .Where(r => r.TrainerId == trainerId && r.TrainingType == trainingType)
-                    .ToList()
+                    .Where(r => r.RecordDate.HasValue 
+                            && r.TrainerId == trainerId
+                            && r.TrainingType == trainingType)
                     .Select(r => r.RecordDate.Value.Date)
                     .Distinct()
                     .ToList()
             );
-        }     
-
-        
-        public async Task<List<MasterTraining>> GetScheduledTrainingsByDateAsync(DateTime date)
-        {
-            var targetDate = date.Date;
-            
-        
-            var scheduledTrainings = await Task.FromResult(
-                _uow.Repository<ParticipantUser>()
-                    .Table()
-                    .Where(c => c.TrainingDate.HasValue 
-                            && c.TrainingDate.Value.Date == targetDate)
-                    .Select(c => c.Training) 
-                    .Where(t => t != null && t.IsActive.Value) 
-                    .Distinct()
-                    .ToList()
-            );
-            
-            return scheduledTrainings;
         }
 
+        
+
+
+    public async Task<List<MasterTraining>> GetScheduledTrainingsByDateAsync(DateTime date)
+    {
+        var targetDate = date.Date;
+
+        var trainingIds = await Task.Run(() =>
+            _uow.Repository<RecordTraining>()
+                .Table()
+                .Where(r => r.RecordDate.HasValue 
+                        && r.RecordDate.Value.Date == targetDate)
+                .Select(r => r.TrainingId)
+                .Distinct()
+                .ToList()
+        );
+
+        if (!trainingIds.Any()) return new List<MasterTraining>();
+
+        return await Task.Run(() =>
+            _uow.Repository<MasterTraining>()
+                .Table()
+                .Where(mt => trainingIds.Contains(mt.Id))
+                .ToList()
+        );
+    }
+
+ public async Task<List<ParticipantUser>> GetMissingRefreshParticipantsByDateAsync(DateTime date)
+{
+    // 1. Ambil SEMUA UserId yang berstatus Refresh ('R') di Tabel User
+    var userIdsInRefresh = await Task.Run(() =>
+        _uow.Repository<User>()
+            .Table()
+            .Where(u => u.TrainingType == "R")
+            .Select(u => u.Id)
+            .ToList()
+    );
+
+    if (!userIdsInRefresh.Any())
+        return new List<ParticipantUser>();
+
+    // 2. CRITICAL FIX: Ambil ParticipantId PERTAMA (MIN ID) per UserId
+    // Karena RecordTraining terhubung ke ParticipantId awal saat upload pertama kali.
+    var firstParticipantMap = await Task.Run(() =>
+        _uow.Repository<ParticipantUser>()
+            .Table()
+            .Where(pu => pu.UserId.HasValue && userIdsInRefresh.Contains(pu.UserId.Value))
+            .OrderBy(pu => pu.Id) // Ascending: Ambil ID terkecil (pertama)
+            .ToList()
+            .GroupBy(pu => pu.UserId.Value)
+            .Select(g => g.First())
+            .ToDictionary(k => k.UserId.Value, v => v.Id)
+    );
+
+    var firstParticipantIds = firstParticipantMap.Values.ToList();
+
+    if (!firstParticipantIds.Any())
+        return new List<ParticipantUser>();
+
+    // 3. Cek di RecordTraining: Siapa saja dari ParticipantId LAMA ini yang SUDAH punya record PostTest Type R?
+    var completedParticipantIds = await Task.Run(() =>
+        _uow.Repository<RecordTraining>()
+            .Table()
+            .Where(r => r.StepType == "PostTest"
+                     && r.TrainingType == "R"
+                     && r.ParticipantId.HasValue
+                     && firstParticipantIds.Contains(r.ParticipantId.Value))
+            .Select(r => r.ParticipantId.Value)
+            .Distinct()
+            .ToList()
+    );
+
+    // 4. Cari UserId mana yang ParticipantId lamanya BELUM punya record PostTest
+    // Kita reverse lookup dari completedParticipantIds ke UserId menggunakan dictionary tadi
+    var completedUserIds = new HashSet<int>();
+    foreach (var pid in completedParticipantIds)
+    {
+        var userId = firstParticipantMap.FirstOrDefault(x => x.Value == pid).Key;
+        if (userId != 0)
+        {
+            completedUserIds.Add(userId);
+        }
+    }
+
+    // 5. Selisih: Yang Berstatus R TAPI UserId-nya tidak ada di list Completed
+    var missingUserIds = userIdsInRefresh.Except(completedUserIds).ToList();
+
+    if (!missingUserIds.Any())
+        return new List<ParticipantUser>();
+
+    // 6. Ambil Data ParticipantUser TERBARU per UserId yang Missing (untuk tampilan UI/Excel yang rapi)
+    // Kita butuh data departemen/trainer terbaru, jadi kita join ke ParticipantUser lagi
+    var rawParticipants = await Task.Run(() =>
+        _uow.Repository<ParticipantUser>()
+            .Table()
+            .Where(pu => pu.UserId.HasValue && missingUserIds.Contains(pu.UserId.Value))
+            .OrderByDescending(pu => pu.Id) // Ambil yang paling baru untuk data display
+            .ToList()
+            .GroupBy(pu => pu.UserId.Value)
+            .Select(g => g.First()) // Distinct by UserId
+            .ToList()
+    );
+
+    var userIdsToLoad = rawParticipants.Select(p => p.UserId.Value).Distinct().ToList();
+    
+    if (!userIdsToLoad.Any()) return rawParticipants;
+
+    var users = await _uow.Repository<User>().GetAllAsync(u => userIdsToLoad.Contains(u.Id));
+    var userDict = users.ToDictionary(u => u.Id, u => u);
+
+    foreach (var p in rawParticipants)
+    {
+        if (userDict.TryGetValue(p.UserId.Value, out var user))
+        {
+            p.User = user;
+        }
+    }
+
+    return rawParticipants;
+}
+
+
+    public async Task<List<ParticipantUser>> GetInductionPresenceAsync(DateTime date)
+    {
+        var targetDate = date.Date;
+        Console.WriteLine($"[DEBUG] Start GetInductionPresenceAsync for Date: {targetDate}");
+
+        // 1. Ambil UserId yang punya record INDUCTION ('I') di tanggal tersebut
+        var userIds = await Task.Run(() =>
+            _uow.Repository<RecordTraining>()
+                .Table()
+                .Join(_uow.Repository<ParticipantUser>().Table(), 
+                    rt => rt.ParticipantId, 
+                    pu => pu.Id, 
+                    (rt, pu) => new { rt.RecordDate, rt.TrainingType, pu.UserId })
+                .Where(x => x.RecordDate.HasValue 
+                        && x.RecordDate.Value.Date == targetDate
+                        && x.TrainingType.Trim() == "I") // FILTER INDUCTION
+                .Select(x => x.UserId)
+                .Where(uid => uid.HasValue)
+                .Select(uid => uid.Value)
+                .Distinct()
+                .ToList()
+        );
+
+        Console.WriteLine($"[DEBUG] Found {userIds.Count} UserIds with Induction activity on {targetDate}");
+
+        if (!userIds.Any())
+            return new List<ParticipantUser>();
+
+        // 2. Ambil ParticipantUser TERBARU per UserId tersebut
+        var participants = await Task.Run(() =>
+            _uow.Repository<ParticipantUser>()
+                .Table()
+                .Where(pu => pu.UserId.HasValue && userIds.Contains(pu.UserId.Value))
+                .OrderByDescending(pu => pu.Id)
+                .ToList()
+                .GroupBy(pu => pu.UserId.Value)
+                .Select(g => g.First())
+                .ToList()
+        );
+
+        // 3. Load User Details
+        var userIdsToLoad = participants.Select(p => p.UserId.Value).Distinct().ToList();
+        
+        if (userIdsToLoad.Any())
+        {
+            var users = await _uow.Repository<User>().GetAllAsync(u => userIdsToLoad.Contains(u.Id));
+            var userDict = users.ToDictionary(u => u.Id, u => u);
+
+            foreach (var p in participants)
+            {
+                if (userDict.TryGetValue(p.UserId.Value, out var user))
+                {
+                    p.User = user;
+                    p.TrainingDate = targetDate;
+                }
+            }
+        }
+
+        return participants;
+    }
+
+    public async Task<Dictionary<int, int>> GetInductionOriginalParticipantIdsAsync(DateTime date, List<int> userIds)
+{
+    if (!userIds.Any()) return new Dictionary<int, int>();
+
+    var mapping = new Dictionary<int, int>();
+
+    var records = await Task.Run(() =>
+        _uow.Repository<RecordTraining>()
+            .Table()
+            .Where(r => r.RecordDate.HasValue 
+                    && r.RecordDate.Value.Date == date.Date
+                    && r.TrainingType == "I")
+            .ToList()
+    );
+
+    var validParticipantIds = records
+        .Where(r => r.ParticipantId.HasValue)
+        .Select(r => r.ParticipantId.Value)
+        .Distinct()
+        .ToList();
+    
+    if (!validParticipantIds.Any()) return mapping;
+
+    var participants = await Task.Run(() =>
+        _uow.Repository<ParticipantUser>()
+            .Table()
+            .Where(pu => validParticipantIds.Contains(pu.Id))
+            .ToList()
+    );
+
+    var puDict = new Dictionary<int, int>();
+    foreach (var p in participants)
+    {
+        if (p.UserId.HasValue)
+        {
+            int uid = p.UserId.Value;
+            if (uid > 0)
+            {
+                puDict[p.Id] = uid;
+            }
+        }
+    }
+
+    foreach (var r in records)
+    {
+        if (r.ParticipantId.HasValue)
+        {
+            int currentPid = r.ParticipantId.Value;
+            
+            if (puDict.TryGetValue(currentPid, out int uid))
+            {
+                if (userIds.Contains(uid) && !mapping.ContainsKey(uid))
+                {
+                    mapping[uid] = currentPid;
+                }
+            }
+        }
+    }
+
+    return mapping;
+    }
+
+
+    public async Task<List<ParticipantUser>> GetGlobalRefreshPresenceAsync(DateTime date)
+    {
+        var targetDate = date.Date;
+        var userIds = await Task.Run(() =>
+            _uow.Repository<RecordTraining>()
+                .Table()
+                .Join(_uow.Repository<ParticipantUser>().Table(), 
+                    rt => rt.ParticipantId, 
+                    pu => pu.Id, 
+                    (rt, pu) => new { rt.RecordDate, rt.TrainingType, pu.UserId })
+                .Where(x => x.RecordDate.HasValue 
+                        && x.RecordDate.Value.Date == targetDate
+                        && x.TrainingType.Trim() == "R")
+                .Select(x => x.UserId)
+                .Where(uid => uid.HasValue)
+                .Select(uid => uid.Value)
+                .Distinct()
+                .ToList()
+        );
+
+        if (!userIds.Any()) return new List<ParticipantUser>();
+
+        var participants = await Task.Run(() =>
+            _uow.Repository<ParticipantUser>()
+                .Table()
+                .Where(pu => pu.UserId.HasValue && userIds.Contains(pu.UserId.Value))
+                .OrderByDescending(pu => pu.Id)
+                .ToList()
+                .GroupBy(pu => pu.UserId.Value)
+                .Select(g => g.First())
+                .ToList()
+        );
+
+        var userIdsToLoad = participants.Select(p => p.UserId.Value).Distinct().ToList();
+        if (userIdsToLoad.Any())
+        {
+            var users = await _uow.Repository<User>().GetAllAsync(u => userIdsToLoad.Contains(u.Id));
+            var userDict = users.ToDictionary(u => u.Id, u => u);
+            foreach (var p in participants)
+            {
+                if (userDict.TryGetValue(p.UserId.Value, out var user))
+                {
+                    p.User = user;
+                    p.TrainingDate = targetDate;
+                }
+            }
+        }
+        return participants;
+    }
 
 }

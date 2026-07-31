@@ -49,4 +49,6 @@ public class ParticipantUserVM
     public SelectList? ListTraining { get; set; }
     public List<int> SelectedParticipants { get; set; }
     public List<ParticipantUserVM> Participants { get; set; }
+    public string? DurationDisplay { get; set; }
+    public string? TrainingTypeForDuration { get; set; } = "I";
 }

@@ -145,6 +145,13 @@
 </head>
 <body>
     <div class="pdf-training-form">
+        <div style="text-align: right; margin-bottom: 10px;">
+            <a href="@Url.Action("DownloadTrainingFormAsPdf", "Report", new { date = Model.TrainingDate.ToString("yyyy-MM-dd"), trainingId = ViewBag.TrainingId })" 
+            target="_blank"
+            style="background-color: #dc2626; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            Download PDF
+            </a>
+        </div>
         <!-- Header Section -->
         <div class="form-header">
             <div class="form-title">TRAINING ATTENDANCE FORM</div>
@@ -190,7 +197,7 @@
                     <td class="header-value">
                         <div class="checkbox-box"></div>
                     </td>
-                    <td class="header-value">@SafeValue(ViewBag.Duration)</td>
+                    <td class="header-value">@Model.DurationDisplay</td>
                     <td class="header-value" colspan="2">@SafeValue(ViewBag.Cost)</td>
                 </tr>
                 <tr>

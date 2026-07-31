@@ -7,6 +7,11 @@ using Dinduction.Application.Services;
 using Dinduction.Web.Profiles;
 using Dinduction.Infrastructure.Services;
 using Dinduction.Domain.Entities;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
